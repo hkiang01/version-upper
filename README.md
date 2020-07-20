@@ -46,7 +46,6 @@ Options:
   --help         Show this message and exit.
 
 Commands:
-  add-files                 Adds files/directories to config.
   bump                      Bumps version strings, updates config.
   config-schema             Prints the config schema in JSON
   current-semantic-version  Prints the current semantic version

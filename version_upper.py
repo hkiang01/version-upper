@@ -149,31 +149,6 @@ def files(version_upper: VersionUpper) -> None:
             print(f)
 
 
-@cli.command(help="Adds files/directories to config.")
-@click.argument(
-    "files",
-    nargs=-1,
-    required=True,
-    type=click.Path(exists=True, file_okay=True, dir_okay=True),
-)
-@click.pass_obj
-def add_files(version_upper: VersionUpper, files):
-    # append files
-    config_files = version_upper.config.files
-    for f in files:
-        to_add: pathlib.Path = pathlib.Path(click.format_filename(f))
-        config_files.append(to_add)  # type: ignore
-
-    # sort unique files
-    config_files = list(set(config_files))
-    config_files.sort()
-    version_upper.config.files = config_files
-
-    # overwrite config file
-    with open(version_upper.config_path, "w") as f:
-        f.write(str(version_upper.config.json(indent=2)))
-
-
 @cli.command(help="Removes rc from the version strings")
 @click.pass_obj
 def release(version_upper: VersionUpper) -> None:
