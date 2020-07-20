@@ -5,6 +5,8 @@
 
 Primarily a reaction to [bumpversion](https://github.com/peritus/bumpversion) not supporting git hahes -- [issue](https://github.com/peritus/bumpversion/issues/125)
 
+## Overview
+
 ```
 python version_upper.py --help
 
@@ -51,4 +53,16 @@ Commands:
   current-version           Prints the current version
   release                   Removes rc from the version strings
   sample-config             Prints a sample config
+```
+
+## Configuration
+
+Create a file called `"version_upper.json"` like below:
+
+```json
+{
+  "current_version": "0.0.0",
+  "current_semantic_version": "0.0.0",
+  "files": []
+}
 ```
