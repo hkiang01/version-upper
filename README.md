@@ -1,7 +1,6 @@
 # version_upper
 
 [![Build Status](https://travis-ci.com/hkiang01/version_upper.svg?branch=master)](https://travis-ci.com/hkiang01/version_upper)
-
 <a href='https://coveralls.io/github/hkiang01/version_upper?branch=master'><img src='https://coveralls.io/repos/github/hkiang01/version_upper/badge.svg?branch=master' alt='Coverage Status' /></a>
 
 
