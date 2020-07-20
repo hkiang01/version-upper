@@ -3,8 +3,8 @@ python:
     - "3.8"
 install:
     - pip install -r requirements.txt
-    - pip install pytest pytest-cov coveralls
+    - pip install 'pytest>=5.4.3,<5.5.0' 'pytest-cov>=2.10.0,<2.11.0' 'coveralls>=2.1.1,<2.2.0'
 script:
-    - pytest
+    - coverage run -m pytest tests/
 after_success:
     - coveralls
