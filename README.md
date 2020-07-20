@@ -57,12 +57,14 @@ Commands:
 
 ## Configuration
 
-Create a file called `"version_upper.json"` like below:
+Create a file called `version_upper.json` (can be overridden using `--config`) like below:
 
 ```json
 {
   "current_version": "0.0.0",
   "current_semantic_version": "0.0.0",
-  "files": []
+  "files": ["main.py", "app/version.json"]
 }
 ```
+
+Be sure to add files to `"files"` otherwise nothing will be updated :)
