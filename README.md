@@ -50,7 +50,6 @@ Commands:
   config-schema             Prints the config schema in JSON
   current-semantic-version  Prints the current semantic version
   current-version           Prints the current version
-  files                     Prints files in which bump will replace version...
   release                   Removes rc from the version strings
   sample-config             Prints a sample config
 ```

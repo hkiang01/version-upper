@@ -1,7 +1,5 @@
 import json
 import logging
-import os
-import pathlib
 import re
 import subprocess
 from enum import Enum
@@ -131,22 +129,6 @@ def current_version(version_upper: VersionUpper) -> None:
 @click.pass_obj
 def current_semantic_version(version_upper: VersionUpper) -> None:
     print(version_upper.config.current_semantic_version)
-
-
-@cli.command(help="Prints files in which bump will replace version strings")
-@click.pass_obj
-def files(version_upper: VersionUpper) -> None:
-    files = []
-    for f in version_upper.config.files:
-        if os.path.isfile(f):
-            files.append(f)
-        elif os.path.isdir(f):
-            for r, d, f in os.walk(f):
-                for _f in f:
-                    files.append(os.path.join(r, _f))
-    if len(files) > 0:
-        for f in files:
-            print(f)
 
 
 @cli.command(help="Removes rc from the version strings")
