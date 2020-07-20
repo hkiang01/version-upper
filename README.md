@@ -1,8 +1,7 @@
 # version_upper
 
 [![Build Status](https://travis-ci.com/hkiang01/version_upper.svg?branch=master)](https://travis-ci.com/hkiang01/version_upper)
-
-<!-- [![Coverage Status](https://coveralls.io/repos/github/hkiang01/version_upper/badge.svg?branch=master)](https://coveralls.io/github/hkiang01/version_upper?branch=master) -->
+[![Coverage Status](https://coveralls.io/repos/github/hkiang01/version_upper/badge.svg?branch=master)](https://coveralls.io/github/hkiang01/version_upper?branch=master)
 
 Primarily a reaction to [bumpversion](https://github.com/peritus/bumpversion) not supporting git hahes -- [issue](https://github.com/peritus/bumpversion/issues/125)
 
