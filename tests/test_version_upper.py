@@ -35,7 +35,9 @@ def __init_repo_with_version(file_name: str, content: str) -> str:
     commit_hash = subprocess.check_output(
         ["git", "log", "-n1", "--format=format:%H"]
     ).decode()
-    logger.debug(f"Initialized repo with {file_name} at commit {commit_hash}")
+    logger.debug(
+        "Initialized repo with {} at commit {}".format(file_name, commit_hash)
+    )
     return commit_hash
 
 
@@ -101,15 +103,19 @@ def bump_test_helper(
         )
         if expected_new_version is None:
             expected_new_version = commit_hash
-        logger.debug(f"version_file_contents before:\n{version_file_contents}")
+        logger.debug(
+            "version_file_contents before:\n{}".format(version_file_contents)
+        )
         # create config file in fs
         config_file_contents["files"] = [version_file_name]
-        logger.debug(f"config_file_contents before:\n{config_file_contents}")
+        logger.debug(
+            "config_file_contents before:\n{}".format(config_file_contents)
+        )
         with open(DEFAULT_CONFIG_FILE, "w") as f:
             json.dump(config_file_contents, f)
 
         # run command
-        logger.debug(f"Running {cli_args}")
+        logger.debug("Running {}".format(cli_args))
         result = runner.invoke(cli, cli_args)
         assert result.exit_code == 0
 
@@ -117,7 +123,9 @@ def bump_test_helper(
         del config_file_contents
         with open(DEFAULT_CONFIG_FILE) as f:
             config_file_contents = json.load(f)
-        logger.debug(f"config_file_contents after:\n{config_file_contents}")
+        logger.debug(
+            "config_file_contents after:\n{}".format(config_file_contents)
+        )
         assert config_file_contents["files"] == old_files
         assert config_file_contents["current_version"] == expected_new_version
         assert (
@@ -128,7 +136,9 @@ def bump_test_helper(
         # check version file
         with open(version_file_name) as f:
             version_file_contents = f.read()
-        logger.debug(f"version_file_contents after:\n{version_file_contents}")
+        logger.debug(
+            "version_file_contents after:\n{}".format(version_file_contents)
+        )
         assert expected_new_version in version_file_contents
         if old_version:
             assert old_version not in version_file_contents
