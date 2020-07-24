@@ -8,9 +8,7 @@ Primarily a reaction to [bumpversion](https://github.com/peritus/bumpversion) no
 ## Overview
 
 ```
-python version_upper.py --help
-
-Usage: version_upper.py [OPTIONS] COMMAND [ARGS]...
+Usage: version-upper [OPTIONS] COMMAND [ARGS]...
 
   A tool to update version strings in files using semantic versioning and
   commit hashes.
@@ -18,19 +16,19 @@ Usage: version_upper.py [OPTIONS] COMMAND [ARGS]...
   Examples:
 
   # bump commit sha version
-  python version_upper.py bump commit_sha
+  version-upper bump commit_sha
 
   # bump patch version
-  python version_upper.py bump patch
+  version-upper bump patch
 
   # bump patch version as release candidate
-  python version_upper.py bump patch --release-candidate
+  version-upper bump patch --release-candidate
 
   # bump minor version
-  python version_upper.py bump minor
+  version-upper bump minor
 
   # bump major version
-  python version_upper.py bump major
+  version-upper bump major
 
   The config file adheres to the Config Pydantic schema, and is named
   version_conifg.json by default.

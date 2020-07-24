@@ -101,7 +101,7 @@ class VersionUpper(object):
         "current_semantic_version": "0.0.0",
         "files": []
     }
-    """
+    """,
 )
 @click.option("--config", default=DEFAULT_CONFIG_FILE, show_default=True)
 @click.pass_context
