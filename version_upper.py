@@ -72,23 +72,23 @@ class VersionUpper(object):
 
     \b
     # bump commit sha version
-    python version_upper.py bump commit_sha
+    version-upper bump commit_sha
 
     \b
     # bump patch version
-    python version_upper.py bump patch
+    version-upper bump patch
 
     \b
     # bump patch version as release candidate
-    python version_upper.py bump patch --release-candidate
+    version-upper bump patch --release-candidate
 
     \b
     # bump minor version
-    python version_upper.py bump minor
+    version-upper bump minor
 
     \b
     # bump major version
-    python version_upper.py bump major
+    version-upper bump major
 
 
     The config file adheres to the Config Pydantic schema,
