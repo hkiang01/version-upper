@@ -5,6 +5,8 @@
 
 Primarily a reaction to [bumpversion](https://github.com/peritus/bumpversion) not supporting git hashes -- [issue](https://github.com/peritus/bumpversion/issues/125)
 
+![Demo](demo.gif)
+
 ## Overview
 
 ```
