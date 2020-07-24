@@ -55,7 +55,7 @@ Commands:
 
 ## Configuration
 
-Create a file called `version_upper.json` (can be overridden using `--config`) like below:
+Create a file called `version-upper.json` (can be overridden using `--config`) like below:
 
 ```json
 {
