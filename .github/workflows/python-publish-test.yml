@@ -3,7 +3,16 @@
 
 name: Upload Python Package
 
-on: [release]
+on:
+  release:
+    types:
+      - published
+      - unpublished
+      - created
+      - edited
+      - deleted
+      - prereleased
+      - released
 
 jobs:
   deploy:
