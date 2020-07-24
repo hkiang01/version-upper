@@ -1,4 +1,4 @@
-# version_upper
+# version-upper
 
 [![Build Status](https://travis-ci.com/hkiang01/version_upper.svg?branch=master)](https://travis-ci.com/hkiang01/version_upper)
 [![Coverage](https://coveralls.io/repos/github/hkiang01/version_upper/badge.svg?branch=master&service=github )](https://coveralls.io/github/hkiang01/version_upper?branch=master)
