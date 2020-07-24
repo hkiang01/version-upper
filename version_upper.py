@@ -92,7 +92,7 @@ class VersionUpper(object):
 
 
     The config file adheres to the Config Pydantic schema,
-    and is named version_conifg.json by default.
+    and is named version-upper.json by default.
 
     \b
     Here is a sample config:
