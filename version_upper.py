@@ -10,7 +10,7 @@ from pydantic import BaseModel, DirectoryPath, Field, FilePath
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_CONFIG_FILE = "version_upper.json"
+DEFAULT_CONFIG_FILE = "version-upper.json"
 
 
 class Config(BaseModel):
