@@ -33,7 +33,7 @@ Usage: version-upper [OPTIONS] COMMAND [ARGS]...
   version-upper bump major
 
   The config file adheres to the Config Pydantic schema, and is named
-  version_conifg.json by default.
+  version-upper.json by default.
 
   Here is a sample config:
   {
@@ -43,7 +43,7 @@ Usage: version-upper [OPTIONS] COMMAND [ARGS]...
   }
 
 Options:
-  --config TEXT  [default: version_upper.json]
+  --config TEXT  [default: version-upper.json]
   --help         Show this message and exit.
 
 Commands:
