@@ -17,8 +17,8 @@ Usage: version-upper [OPTIONS] COMMAND [ARGS]...
 
   Examples:
 
-  # bump commit sha version
-  version-upper bump commit_sha
+  # bump commit hash version
+  version-upper bump commit_hash
 
   # bump patch version
   version-upper bump patch

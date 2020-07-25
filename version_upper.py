@@ -71,8 +71,8 @@ class VersionUpper(object):
     Examples:
 
     \b
-    # bump commit sha version
-    version-upper bump commit_sha
+    # bump commit hash version
+    version-upper bump commit_hash
 
     \b
     # bump patch version
