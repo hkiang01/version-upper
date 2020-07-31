@@ -56,12 +56,11 @@ class VersionUpper(object):
             with open(config_path) as f:
                 self.config: Config = Config(**json.load(f))
         except FileNotFoundError:
-            logger.error(
-                f"ERROR: Unable to find config file {config_path}.\n"
-                "See below for a sample config:\n"
-                f"{Config().json(indent=2)}"
+            raise click.FileError(
+                config_path,
+                "\nSee below for a sample config:\n"
+                f"{Config().json(indent=2)}",
             )
-            exit(1)
 
 
 @click.group(
@@ -106,29 +105,30 @@ class VersionUpper(object):
 @click.option("--config", default=DEFAULT_CONFIG_FILE, show_default=True)
 @click.pass_context
 def cli(ctx, config: str):
-    ctx.obj = VersionUpper(config_path=config)
+    if ctx.invoked_subcommand not in ["config-schema", "sample-config"]:
+        ctx.obj = VersionUpper(config_path=config)
 
 
 @cli.command(help="Prints the config schema in JSON")
 def config_schema() -> None:
-    print(Config().schema_json(indent=2))
+    click.echo(Config.schema_json())
 
 
 @cli.command(help="Prints a sample config")
 def sample_config() -> None:
-    print(Config().json(indent=2))
+    click.echo(Config().json(indent=2))
 
 
 @cli.command(help="Prints the current version")
 @click.pass_obj
 def current_version(version_upper: VersionUpper) -> None:
-    print(version_upper.config.current_version)
+    click.echo(version_upper.config.current_version)
 
 
 @cli.command(help="Prints the current semantic version")
 @click.pass_obj
 def current_semantic_version(version_upper: VersionUpper) -> None:
-    print(version_upper.config.current_semantic_version)
+    click.echo(version_upper.config.current_semantic_version)
 
 
 @cli.command(help="Removes rc from the version strings")
@@ -138,7 +138,7 @@ def release(version_upper: VersionUpper) -> None:
     current_version = config.current_version
     commit_hash_pattern = re.compile(r"[\da-f]{40}")
     if commit_hash_pattern.search(current_version):
-        logger.error("Canont release if current verison is a commit hash")
+        logger.error("Cannot release if current verison is a commit hash")
         exit(1)
 
     rc_pattern = re.compile(r"\d+\.\d+\.\d+rc(\d+)")
