@@ -138,7 +138,7 @@ def release(version_upper: VersionUpper) -> None:
     current_version = config.current_version
     commit_hash_pattern = re.compile(r"[\da-f]{40}")
     if commit_hash_pattern.search(current_version):
-        logger.error("Canont release if current verison is a commit hash")
+        logger.error("Cannot release if current verison is a commit hash")
         exit(1)
 
     rc_pattern = re.compile(r"\d+\.\d+\.\d+rc(\d+)")
