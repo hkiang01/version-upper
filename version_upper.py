@@ -128,7 +128,7 @@ def current_version(version_upper: VersionUpper) -> None:
 @cli.command(help="Prints the current semantic version")
 @click.pass_obj
 def current_semantic_version(version_upper: VersionUpper) -> None:
-    print(version_upper.config.current_semantic_version)
+    click.echo(version_upper.config.current_semantic_version)
 
 
 @cli.command(help="Removes rc from the version strings")
