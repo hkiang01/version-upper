@@ -1,7 +1,7 @@
 # version-upper
 
 [![Build Status](https://travis-ci.com/hkiang01/version-upper.svg?branch=master)](https://travis-ci.com/hkiang01/version-upper)
-[![Coverage](https://coveralls.io/repos/github/hkiang01/version-upper/badge.svg?branch=master&service=github )](https://coveralls.io/github/hkiang01/version-upper?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/hkiang01/version-upper/badge.svg?branch=master)](https://coveralls.io/github/hkiang01/version-upper?branch=master)
 
 Primarily a reaction to [bumpversion](https://github.com/peritus/bumpversion) not supporting git hashes -- [issue](https://github.com/peritus/bumpversion/issues/125)
 
