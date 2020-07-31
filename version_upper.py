@@ -111,18 +111,18 @@ def cli(ctx, config: str):
 
 @cli.command(help="Prints the config schema in JSON")
 def config_schema() -> None:
-    print(Config.schema_json())
+    click.echo(Config.schema_json())
 
 
 @cli.command(help="Prints a sample config")
 def sample_config() -> None:
-    print(Config().json(indent=2))
+    click.echo(Config().json(indent=2))
 
 
 @cli.command(help="Prints the current version")
 @click.pass_obj
 def current_version(version_upper: VersionUpper) -> None:
-    print(version_upper.config.current_version)
+    click.echo(version_upper.config.current_version)
 
 
 @cli.command(help="Prints the current semantic version")

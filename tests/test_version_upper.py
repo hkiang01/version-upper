@@ -133,6 +133,19 @@ def bump_test_helper(
         if old_version:
             assert old_version not in version_file_contents
 
+        # check current-version command output
+        current_version_result = runner.invoke(cli, "current-version")
+        assert current_version_result.exit_code == 0
+        assert current_version_result.output == expected_new_version + "\n"
+
+        # check current-semantic-version command output
+        current_version_result = runner.invoke(cli, "current-semantic-version")
+        assert current_version_result.exit_code == 0
+        assert (
+            current_version_result.output
+            == expected_new_semantic_version + "\n"
+        )
+
 
 def test_bump_commit_hash_commit_hash():
     version_file = "tests/sample_version_files/commit_hash.json"
