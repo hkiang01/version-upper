@@ -6,7 +6,7 @@ from typing import List, Optional
 
 from click.testing import CliRunner
 
-from version_upper import DEFAULT_CONFIG_FILE, cli
+from version_upper import DEFAULT_CONFIG_FILE, Config, cli
 
 logger = logging.getLogger(__name__)
 
@@ -1126,3 +1126,63 @@ def test_release_rc():
         expected_new_semantic_version="0.0.0",
         expected_new_version="0.0.0",
     )
+
+
+def test_no_config_file_bump():
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        result = runner.invoke(cli, ["bump"])
+        assert result.exit_code == 1
+        assert (
+            f"Error: Could not open file {DEFAULT_CONFIG_FILE}"
+            in result.output
+        )
+
+
+def test_no_config_file_config_schema():
+    runner = CliRunner()
+    result = runner.invoke(cli, ["config-schema"])
+    assert result.exit_code == 0
+    assert json.loads(result.output) == Config.schema()
+
+
+def test_no_config_file_current_semantic_version():
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        result = runner.invoke(cli, ["current-semantic-version"])
+        assert result.exit_code == 1
+        assert (
+            f"Error: Could not open file {DEFAULT_CONFIG_FILE}"
+            in result.output
+        )
+
+
+def test_no_config_file_current_version():
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        result = runner.invoke(cli, ["current-version"])
+        assert result.exit_code == 1
+        assert (
+            f"Error: Could not open file {DEFAULT_CONFIG_FILE}"
+            in result.output
+        )
+
+
+def test_no_config_file_release():
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        result = runner.invoke(cli, ["release"])
+        assert result.exit_code == 1
+        assert (
+            f"Error: Could not open file {DEFAULT_CONFIG_FILE}"
+            in result.output
+        )
+
+
+def test_no_config_file_sample_config():
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        result = runner.invoke(cli, ["sample-config"])
+        assert result.exit_code == 0
+        config = Config(**json.loads(result.output))
+        assert isinstance(config, Config)

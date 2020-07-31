@@ -56,12 +56,11 @@ class VersionUpper(object):
             with open(config_path) as f:
                 self.config: Config = Config(**json.load(f))
         except FileNotFoundError:
-            logger.error(
-                f"ERROR: Unable to find config file {config_path}.\n"
-                "See below for a sample config:\n"
-                f"{Config().json(indent=2)}"
+            raise click.FileError(
+                config_path,
+                "\nSee below for a sample config:\n"
+                f"{Config().json(indent=2)}",
             )
-            exit(1)
 
 
 @click.group(
@@ -106,12 +105,13 @@ class VersionUpper(object):
 @click.option("--config", default=DEFAULT_CONFIG_FILE, show_default=True)
 @click.pass_context
 def cli(ctx, config: str):
-    ctx.obj = VersionUpper(config_path=config)
+    if ctx.invoked_subcommand not in ["config-schema", "sample-config"]:
+        ctx.obj = VersionUpper(config_path=config)
 
 
 @cli.command(help="Prints the config schema in JSON")
 def config_schema() -> None:
-    print(Config().schema_json(indent=2))
+    print(Config.schema_json())
 
 
 @cli.command(help="Prints a sample config")
