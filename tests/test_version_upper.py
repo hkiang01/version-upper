@@ -4,9 +4,10 @@ import pathlib
 import subprocess
 from typing import List, Optional
 
+import pytest
 from click.testing import CliRunner
 
-from version_upper import DEFAULT_CONFIG_FILE, Config, cli
+from version_upper import DEFAULT_CONFIG_FILE, BumpPart, Config, cli
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +49,7 @@ def bump_test_helper(
     expected_new_version: str = None,
     expected_exit_code: int = 0,
     expected_output: str = None,
+    files_should_not_change: bool = False,
 ):
     """Helper to facilitate testing
 
@@ -89,6 +91,12 @@ def bump_test_helper(
         If defined, will be checked against the result
         of running cli with cli_args,
         by default None
+    files_should_not_change : bool, optional
+        If True, will check to make sure the file contents of config_file
+        and version_file have not changed after running cli with cli_args.
+        If False, will check that the expected changes to config_file
+        and version_file have been made,
+        by default False
     """
     # load version file
     with open(version_file) as f:
@@ -124,38 +132,54 @@ def bump_test_helper(
         if expected_output:
             assert result.output == expected_output
 
-        # check config file
-        del config_file_contents
-        with open(DEFAULT_CONFIG_FILE) as f:
-            config_file_contents = json.load(f)
-        logger.debug(f"config_file_contents after:\n{config_file_contents}")
-        assert config_file_contents["files"] == old_files
-        assert config_file_contents["current_version"] == expected_new_version
-        assert (
-            config_file_contents["current_semantic_version"]
-            == expected_new_semantic_version
-        )
+        if files_should_not_change:
+            with open(version_file_name) as f:
+                new_version_file_contents = f.read()
+                assert new_version_file_contents == version_file_contents
+            with open(DEFAULT_CONFIG_FILE) as f:
+                new_config_file_contents = json.load(f)
+                assert new_config_file_contents == config_file_contents
+        else:
+            # check config file
+            del config_file_contents
+            with open(DEFAULT_CONFIG_FILE) as f:
+                config_file_contents = json.load(f)
+            logger.debug(
+                f"config_file_contents after:\n{config_file_contents}"
+            )
+            assert config_file_contents["files"] == old_files
+            assert (
+                config_file_contents["current_version"] == expected_new_version
+            )
+            assert (
+                config_file_contents["current_semantic_version"]
+                == expected_new_semantic_version
+            )
 
-        # check version file
-        with open(version_file_name) as f:
-            version_file_contents = f.read()
-        logger.debug(f"version_file_contents after:\n{version_file_contents}")
-        assert expected_new_version in version_file_contents
-        if old_version:
-            assert old_version not in version_file_contents
+            # check version file
+            with open(version_file_name) as f:
+                version_file_contents = f.read()
+            logger.debug(
+                f"version_file_contents after:\n{version_file_contents}"
+            )
+            assert expected_new_version in version_file_contents
+            if old_version:
+                assert old_version not in version_file_contents
 
-        # check current-version command output
-        current_version_result = runner.invoke(cli, "current-version")
-        assert current_version_result.exit_code == 0
-        assert current_version_result.output == expected_new_version + "\n"
+            # check current-version command output
+            current_version_result = runner.invoke(cli, "current-version")
+            assert current_version_result.exit_code == 0
+            assert current_version_result.output == expected_new_version + "\n"
 
-        # check current-semantic-version command output
-        current_version_result = runner.invoke(cli, "current-semantic-version")
-        assert current_version_result.exit_code == 0
-        assert (
-            current_version_result.output
-            == expected_new_semantic_version + "\n"
-        )
+            # check current-semantic-version command output
+            current_version_result = runner.invoke(
+                cli, "current-semantic-version"
+            )
+            assert current_version_result.exit_code == 0
+            assert (
+                current_version_result.output
+                == expected_new_semantic_version + "\n"
+            )
 
 
 def test_bump_commit_hash_commit_hash():
@@ -1226,4 +1250,21 @@ def test_illegal_release():
         expected_output=(
             "Error: Unable to release if current version does not contain rc\n"
         ),
+        files_should_not_change=True,
+    )
+
+
+@pytest.mark.parametrize("part", [bp.value for bp in BumpPart])
+def test_config_current_version_not_present_bump(part):
+    version_file = "tests/sample_version_files/commit_hash.json"
+    config_file = "tests/sample_configs/default.json"
+    bump_test_helper(
+        version_file=version_file,
+        config_file=config_file,
+        cli_args=["bump", part],
+        old_version=None,
+        expected_new_semantic_version="0.0.0",
+        expected_exit_code=1,
+        expected_output=("Error: Unable to find 0.0.0 in commit_hash.json\n"),
+        files_should_not_change=True,
     )

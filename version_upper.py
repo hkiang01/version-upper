@@ -169,8 +169,7 @@ def __replace_version_strings(
         with open(f, "r") as fp:
             old_content = fp.read()
         if old_version not in old_content:
-            logger.error(f"Unable to find {old_version} in {f}")
-            exit(1)
+            raise click.ClickException(f"Unable to find {old_version} in {f}")
         new_content = old_content.replace(old_version, new_version)
         with open(f, "w") as fp:
             fp.write(new_content)
