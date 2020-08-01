@@ -47,8 +47,7 @@
 	"extensions": [
 		"ms-python.python",
 		"ms-pyright.pyright",
-		"njpwerner.autodocstring",
-		"ryanluker.vscode-coverage-gutters"
+		"njpwerner.autodocstring"
 	],
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
