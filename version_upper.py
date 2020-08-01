@@ -136,19 +136,13 @@ def current_semantic_version(version_upper: VersionUpper) -> None:
 def release(version_upper: VersionUpper) -> None:
     config = version_upper.config
     current_version = config.current_version
-    commit_hash_pattern = re.compile(r"[\da-f]{40}")
-    if commit_hash_pattern.search(current_version):
-        logger.error("Cannot release if current verison is a commit hash")
-        exit(1)
-
     rc_pattern = re.compile(r"\d+\.\d+\.\d+rc(\d+)")
     if rc_pattern.search(current_version) is None:
-        logger.error(
+        raise click.ClickException(
             "Unable to release if current version does not contain rc"
         )
-        exit(1)
 
-    new_version_pattern = re.compile(r"(\d+\.\d+\.\d+)rc1")
+    new_version_pattern = re.compile(r"(\d+\.\d+\.\d+)rc.*")
     new_version = new_version_pattern.search(current_version).group(1)
     __replace_version_strings(version_upper, new_version, new_version)
 

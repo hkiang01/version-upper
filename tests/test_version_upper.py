@@ -46,6 +46,8 @@ def bump_test_helper(
     old_version: Optional[str],
     expected_new_semantic_version: str,
     expected_new_version: str = None,
+    expected_exit_code: int = 0,
+    expected_output: str = None,
 ):
     """Helper to facilitate testing
 
@@ -80,6 +82,13 @@ def bump_test_helper(
         and in current_version in the config. If not specified, then it will be
         the commit hash of the initial commit of the newly created git repo.
         By default None
+    expected_exit_code : int, optional
+        The expected status code of running cli with cli_args,
+        by default 0
+    expected_output : str, optional
+        If defined, will be checked against the result
+        of running cli with cli_args,
+        by default None
     """
     # load version file
     with open(version_file) as f:
@@ -111,7 +120,9 @@ def bump_test_helper(
         # run command
         logger.debug(f"Running {cli_args}")
         result = runner.invoke(cli, cli_args)
-        assert result.exit_code == 0
+        assert result.exit_code == expected_exit_code
+        if expected_output:
+            assert result.output == expected_output
 
         # check config file
         del config_file_contents
@@ -1199,3 +1210,20 @@ def test_no_config_file_sample_config():
         assert result.exit_code == 0
         config = Config(**json.loads(result.output))
         assert isinstance(config, Config)
+
+
+def test_illegal_release():
+    version_file = "tests/sample_version_files/default.json"
+    config_file = "tests/sample_configs/default.json"
+    bump_test_helper(
+        version_file=version_file,
+        config_file=config_file,
+        cli_args=["release"],
+        old_version=None,
+        expected_new_semantic_version="0.0.0",
+        expected_new_version="0.0.0",
+        expected_exit_code=1,
+        expected_output=(
+            "Error: Unable to release if current version does not contain rc\n"
+        ),
+    )
