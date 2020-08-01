@@ -325,227 +325,113 @@ def test_bump_patch(
     )
 
 
-def test_bump_minor_commit_hash():
-    version_file = "tests/sample_version_files/commit_hash.json"
-    config_file = "tests/sample_configs/commit_hash.json"
+@pytest.mark.parametrize(
+    (
+        "paired_test_files_name,old_version,cli_args,"
+        "expected_new_semantic_version,expected_new_version"
+    ),
+    [
+        (
+            "commit_hash.json",
+            "ae0788689030389e4be2654ad64ba983ba0b71c7",
+            ["bump", "minor"],
+            "0.1.0",
+            "0.1.0",
+        ),
+        (
+            "commit_hash.json",
+            "ae0788689030389e4be2654ad64ba983ba0b71c7",
+            ["bump", "minor", "--release-candidate"],
+            "0.1.0",
+            "0.1.0rc1",
+        ),
+        ("default.json", "0.0.0", ["bump", "minor"], "0.1.0", "0.1.0",),
+        (
+            "default.json",
+            "0.0.0",
+            ["bump", "minor", "--release-candidate"],
+            "0.1.0",
+            "0.1.0rc1",
+        ),
+        ("existing_major.json", "1.0.0", ["bump", "minor"], "1.1.0", "1.1.0",),
+        (
+            "existing_major.json",
+            "1.0.0",
+            ["bump", "minor", "--release-candidate"],
+            "1.1.0",
+            "1.1.0rc1",
+        ),
+        (
+            "existing_major_minor.json",
+            "1.1.0",
+            ["bump", "minor"],
+            "1.2.0",
+            "1.2.0",
+        ),
+        (
+            "existing_major_minor.json",
+            "1.1.0",
+            ["bump", "minor", "--release-candidate"],
+            "1.2.0",
+            "1.2.0rc1",
+        ),
+        ("existing_minor.json", "0.1.0", ["bump", "minor"], "0.2.0", "0.2.0",),
+        (
+            "existing_minor.json",
+            "0.1.0",
+            ["bump", "minor", "--release-candidate"],
+            "0.2.0",
+            "0.2.0rc1",
+        ),
+        (
+            "existing_minor_patch.json",
+            "0.1.1",
+            ["bump", "minor"],
+            "0.2.0",
+            "0.2.0",
+        ),
+        (
+            "existing_minor_patch.json",
+            "0.1.1",
+            ["bump", "minor", "--release-candidate"],
+            "0.2.0",
+            "0.2.0rc1",
+        ),
+        ("existing_patch.json", "0.0.1", ["bump", "minor"], "0.1.0", "0.1.0",),
+        (
+            "existing_patch.json",
+            "0.0.1",
+            ["bump", "minor", "--release-candidate"],
+            "0.1.0",
+            "0.1.0rc1",
+        ),
+        ("rc.json", "0.0.0rc1", ["bump", "minor"], "0.1.0", "0.1.0",),
+        (
+            "rc.json",
+            "0.0.0rc1",
+            ["bump", "minor", "--release-candidate"],
+            "0.1.0",
+            "0.1.0rc1",
+        ),
+    ],
+)
+def test_bump_minor(
+    paired_test_files_name,
+    cli_args,
+    old_version,
+    expected_new_semantic_version,
+    expected_new_version,
+):
+    version_file = f"tests/sample_version_files/{paired_test_files_name}"
+    config_file = f"tests/sample_configs/{paired_test_files_name}"
 
     bump_test_helper(
         version_file=version_file,
         config_file=config_file,
-        cli_args=["bump", "minor"],
-        old_version="ae0788689030389e4be2654ad64ba983ba0b71c7",
-        expected_new_semantic_version="0.1.0",
-        expected_new_version="0.1.0",
-    )
-
-
-def test_bump_minor_commit_hash_release_candidate():
-    version_file = "tests/sample_version_files/commit_hash.json"
-    config_file = "tests/sample_configs/commit_hash.json"
-
-    bump_test_helper(
-        version_file=version_file,
-        config_file=config_file,
-        cli_args=["bump", "minor", "--release-candidate"],
-        old_version="ae0788689030389e4be2654ad64ba983ba0b71c7",
-        expected_new_semantic_version="0.1.0",
-        expected_new_version="0.1.0rc1",
-    )
-
-
-def test_bump_minor_default():
-    version_file = "tests/sample_version_files/default.json"
-    config_file = "tests/sample_configs/default.json"
-
-    bump_test_helper(
-        version_file=version_file,
-        config_file=config_file,
-        cli_args=["bump", "minor"],
-        old_version="0.0.0",
-        expected_new_semantic_version="0.1.0",
-        expected_new_version="0.1.0",
-    )
-
-
-def test_bump_minor_default_release_candidate():
-    version_file = "tests/sample_version_files/default.json"
-    config_file = "tests/sample_configs/default.json"
-
-    bump_test_helper(
-        version_file=version_file,
-        config_file=config_file,
-        cli_args=["bump", "minor", "--release-candidate"],
-        old_version="0.0.0",
-        expected_new_semantic_version="0.1.0",
-        expected_new_version="0.1.0rc1",
-    )
-
-
-def test_bump_minor_existing_major():
-    version_file = "tests/sample_version_files/existing_major.json"
-    config_file = "tests/sample_configs/existing_major.json"
-
-    bump_test_helper(
-        version_file=version_file,
-        config_file=config_file,
-        cli_args=["bump", "minor"],
-        old_version="1.0.0",
-        expected_new_semantic_version="1.1.0",
-        expected_new_version="1.1.0",
-    )
-
-
-def test_bump_minor_existing_major_release_candidate():
-    version_file = "tests/sample_version_files/existing_major.json"
-    config_file = "tests/sample_configs/existing_major.json"
-
-    bump_test_helper(
-        version_file=version_file,
-        config_file=config_file,
-        cli_args=["bump", "minor", "--release-candidate"],
-        old_version="1.0.0",
-        expected_new_semantic_version="1.1.0",
-        expected_new_version="1.1.0rc1",
-    )
-
-
-def test_bump_minor_existing_major_minor():
-    version_file = "tests/sample_version_files/existing_major_minor.json"
-    config_file = "tests/sample_configs/existing_major_minor.json"
-
-    bump_test_helper(
-        version_file=version_file,
-        config_file=config_file,
-        cli_args=["bump", "minor"],
-        old_version="1.1.0",
-        expected_new_semantic_version="1.2.0",
-        expected_new_version="1.2.0",
-    )
-
-
-def test_bump_minor_existing_major_minor_release_candidate():
-    version_file = "tests/sample_version_files/existing_major_minor.json"
-    config_file = "tests/sample_configs/existing_major_minor.json"
-
-    bump_test_helper(
-        version_file=version_file,
-        config_file=config_file,
-        cli_args=["bump", "minor", "--release-candidate"],
-        old_version="1.1.0",
-        expected_new_semantic_version="1.2.0",
-        expected_new_version="1.2.0rc1",
-    )
-
-
-def test_bump_minor_existing_minor():
-    version_file = "tests/sample_version_files/existing_minor.json"
-    config_file = "tests/sample_configs/existing_minor.json"
-
-    bump_test_helper(
-        version_file=version_file,
-        config_file=config_file,
-        cli_args=["bump", "minor"],
-        old_version="0.1.0",
-        expected_new_semantic_version="0.2.0",
-        expected_new_version="0.2.0",
-    )
-
-
-def test_bump_minor_existing_minor_release_candidate():
-    version_file = "tests/sample_version_files/existing_minor.json"
-    config_file = "tests/sample_configs/existing_minor.json"
-
-    bump_test_helper(
-        version_file=version_file,
-        config_file=config_file,
-        cli_args=["bump", "minor", "--release-candidate"],
-        old_version="0.1.0",
-        expected_new_semantic_version="0.2.0",
-        expected_new_version="0.2.0rc1",
-    )
-
-
-def test_bump_minor_existing_minor_patch():
-    version_file = "tests/sample_version_files/existing_minor_patch.json"
-    config_file = "tests/sample_configs/existing_minor_patch.json"
-
-    bump_test_helper(
-        version_file=version_file,
-        config_file=config_file,
-        cli_args=["bump", "minor"],
-        old_version="0.1.1",
-        expected_new_semantic_version="0.2.0",
-        expected_new_version="0.2.0",
-    )
-
-
-def test_bump_minor_existing_minor_patch_release_candidate():
-    version_file = "tests/sample_version_files/existing_minor_patch.json"
-    config_file = "tests/sample_configs/existing_minor_patch.json"
-
-    bump_test_helper(
-        version_file=version_file,
-        config_file=config_file,
-        cli_args=["bump", "minor", "--release-candidate"],
-        old_version="0.1.1",
-        expected_new_semantic_version="0.2.0",
-        expected_new_version="0.2.0rc1",
-    )
-
-
-def test_bump_minor_existing_patch():
-    version_file = "tests/sample_version_files/existing_patch.json"
-    config_file = "tests/sample_configs/existing_patch.json"
-
-    bump_test_helper(
-        version_file=version_file,
-        config_file=config_file,
-        cli_args=["bump", "minor"],
-        old_version="0.0.1",
-        expected_new_semantic_version="0.1.0",
-        expected_new_version="0.1.0",
-    )
-
-
-def test_bump_minor_existing_patch_release_candidate():
-    version_file = "tests/sample_version_files/existing_patch.json"
-    config_file = "tests/sample_configs/existing_patch.json"
-
-    bump_test_helper(
-        version_file=version_file,
-        config_file=config_file,
-        cli_args=["bump", "minor", "--release-candidate"],
-        old_version="0.0.1",
-        expected_new_semantic_version="0.1.0",
-        expected_new_version="0.1.0rc1",
-    )
-
-
-def test_bump_minor_rc():
-    version_file = "tests/sample_version_files/rc.json"
-    config_file = "tests/sample_configs/rc.json"
-
-    bump_test_helper(
-        version_file=version_file,
-        config_file=config_file,
-        cli_args=["bump", "minor"],
-        old_version="0.0.0rc1",
-        expected_new_semantic_version="0.1.0",
-        expected_new_version="0.1.0",
-    )
-
-
-def test_bump_minor_rc_release_candidate():
-    version_file = "tests/sample_version_files/rc.json"
-    config_file = "tests/sample_configs/rc.json"
-
-    bump_test_helper(
-        version_file=version_file,
-        config_file=config_file,
-        cli_args=["bump", "minor", "--release-candidate"],
-        old_version="0.0.0rc1",
-        expected_new_semantic_version="0.1.0",
-        expected_new_version="0.1.0rc1",
+        cli_args=cli_args,
+        old_version=old_version,
+        expected_new_semantic_version=expected_new_semantic_version,
+        expected_new_version=expected_new_version,
     )
 
 
