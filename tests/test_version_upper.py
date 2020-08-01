@@ -182,114 +182,35 @@ def bump_test_helper(
             )
 
 
-def test_bump_commit_hash_commit_hash():
-    version_file = "tests/sample_version_files/commit_hash.json"
-    config_file = "tests/sample_configs/commit_hash.json"
+@pytest.mark.parametrize(
+    "paired_test_files_name,old_version,expected_new_semantic_version",
+    [
+        (
+            "commit_hash.json",
+            "ae0788689030389e4be2654ad64ba983ba0b71c7",
+            "0.0.0",
+        ),
+        ("default.json", "0.0.0", "0.0.0",),
+        ("existing_major.json", "1.0.0", "1.0.0",),
+        ("existing_major_minor.json", "1.1.0", "1.1.0",),
+        ("existing_minor.json", "0.1.0", "0.1.0",),
+        ("existing_minor_patch.json", "0.1.1", "0.1.1",),
+        ("existing_patch.json", "0.0.1", "0.0.1",),
+        ("rc.json", "0.0.0rc1", "0.0.0",),
+    ],
+)
+def test_bump_commit_hash(
+    paired_test_files_name, old_version, expected_new_semantic_version
+):
+    version_file = f"tests/sample_version_files/{paired_test_files_name}"
+    config_file = f"tests/sample_configs/{paired_test_files_name}"
 
     bump_test_helper(
         version_file=version_file,
         config_file=config_file,
         cli_args=["bump", "commit_hash"],
-        old_version="ae0788689030389e4be2654ad64ba983ba0b71c7",
-        expected_new_semantic_version="0.0.0",
-        expected_new_version=None,
-    )
-
-
-def test_bump_commit_hash_default():
-    version_file = "tests/sample_version_files/default.json"
-    config_file = "tests/sample_configs/default.json"
-
-    bump_test_helper(
-        version_file=version_file,
-        config_file=config_file,
-        cli_args=["bump", "commit_hash"],
-        old_version="0.0.0",
-        expected_new_semantic_version="0.0.0",
-        expected_new_version=None,
-    )
-
-
-def test_bump_commit_hash_existing_major():
-    version_file = "tests/sample_version_files/existing_major.json"
-    config_file = "tests/sample_configs/existing_major.json"
-
-    bump_test_helper(
-        version_file=version_file,
-        config_file=config_file,
-        cli_args=["bump", "commit_hash"],
-        old_version="1.0.0",
-        expected_new_semantic_version="1.0.0",
-        expected_new_version=None,
-    )
-
-
-def test_bump_commit_hash_existing_major_minor():
-    version_file = "tests/sample_version_files/existing_major_minor.json"
-    config_file = "tests/sample_configs/existing_major_minor.json"
-
-    bump_test_helper(
-        version_file=version_file,
-        config_file=config_file,
-        cli_args=["bump", "commit_hash"],
-        old_version="1.1.0",
-        expected_new_semantic_version="1.1.0",
-        expected_new_version=None,
-    )
-
-
-def test_bump_commit_hash_existing_minor():
-    version_file = "tests/sample_version_files/existing_minor.json"
-    config_file = "tests/sample_configs/existing_minor.json"
-
-    bump_test_helper(
-        version_file=version_file,
-        config_file=config_file,
-        cli_args=["bump", "commit_hash"],
-        old_version="0.1.0",
-        expected_new_semantic_version="0.1.0",
-        expected_new_version=None,
-    )
-
-
-def test_bump_commit_hash_existing_minor_patch():
-    version_file = "tests/sample_version_files/existing_minor_patch.json"
-    config_file = "tests/sample_configs/existing_minor_patch.json"
-
-    bump_test_helper(
-        version_file=version_file,
-        config_file=config_file,
-        cli_args=["bump", "commit_hash"],
-        old_version="0.1.1",
-        expected_new_semantic_version="0.1.1",
-        expected_new_version=None,
-    )
-
-
-def test_bump_commit_hash_existing_patch():
-    version_file = "tests/sample_version_files/existing_patch.json"
-    config_file = "tests/sample_configs/existing_patch.json"
-
-    bump_test_helper(
-        version_file=version_file,
-        config_file=config_file,
-        cli_args=["bump", "commit_hash"],
-        old_version="0.0.1",
-        expected_new_semantic_version="0.0.1",
-        expected_new_version=None,
-    )
-
-
-def test_bump_commit_hash_rc():
-    version_file = "tests/sample_version_files/rc.json"
-    config_file = "tests/sample_configs/rc.json"
-
-    bump_test_helper(
-        version_file=version_file,
-        config_file=config_file,
-        cli_args=["bump", "commit_hash"],
-        old_version="0.0.0rc1",
-        expected_new_semantic_version="0.0.0",
+        old_version=old_version,
+        expected_new_semantic_version=expected_new_semantic_version,
         expected_new_version=None,
     )
 
