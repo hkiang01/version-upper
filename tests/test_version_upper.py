@@ -44,12 +44,12 @@ def bump_test_helper(
     config_file: str,
     version_file: str,
     cli_args: List[str],
-    old_version: Optional[str],
     expected_exit_code: Optional[int] = 0,
     expected_output: Optional[str] = None,
     files_should_not_change: Optional[bool] = False,
     expected_new_semantic_version: Optional[str] = None,
     expected_new_version: Optional[str] = None,
+    old_version: Optional[str] = None,
 ):
     """Helper to facilitate testing
 
@@ -73,33 +73,34 @@ def bump_test_helper(
         The version file to use in the test (will be added to the config)
     cli_args : List[str]
         The args to pass to cli to bump version
-    old_version : Optional[str]
-        The old version that should not remain in version_file
-        or in current_version in the config file after-the-fact
     expected_exit_code : int, optional
         The expected status code of running cli with cli_args,
         by default 0
-    expected_output : str, optional
+    expected_output : Optional[str]
         If defined, will be checked against the result
         of running cli with cli_args,
         by default None
-    files_should_not_change : bool, optional
+    files_should_not_change : Optional[bool]
         If True, will check to make sure the file contents of config_file
         and version_file have not changed after running cli with cli_args.
         If False, will check that the expected changes to config_file
         and version_file have been made,
         by default False
-    expected_new_semantic_version : str, optional
+    expected_new_semantic_version : Optional[str]
         The new semantic version that should replace the old semantic version
         in version_file and in current_semantic_version in the config.
         Only checked if files_should_not_change is False
         by default None
-    expected_new_version : str, optional
+    expected_new_version : Optional[str]
         The new version that should replace the old version in version_file
         and in current_version in the config. If not specified, then it will be
         the commit hash of the initial commit of the newly created git repo.
         Only checked if files_should_not_change is False
         By default None
+    old_version : Optional[str]
+        The old version that should not remain in version_file
+        or in current_version in the config file after-the-fact,
+        by default None
     """
     # load version file
     with open(version_file) as f:
