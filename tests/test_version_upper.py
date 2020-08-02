@@ -7,7 +7,7 @@ from typing import List, Optional
 import pytest
 from click.testing import CliRunner
 
-from version_upper import DEFAULT_CONFIG_FILE, BumpPart, Config, cli
+from version_upper import DEFAULT_CONFIG_FILE, BumpPart, Config, version_upper
 
 logger = logging.getLogger(__name__)
 
@@ -131,7 +131,7 @@ def bump_test_helper(
 
         # run command
         logger.debug(f"Running {cli_args}")
-        result = runner.invoke(cli, cli_args)
+        result = runner.invoke(version_upper, cli_args)
         assert result.exit_code == expected_exit_code
         if expected_output:
             assert result.output == expected_output
@@ -171,13 +171,15 @@ def bump_test_helper(
                 assert old_version not in version_file_contents
 
             # check current-version command output
-            current_version_result = runner.invoke(cli, "current-version")
+            current_version_result = runner.invoke(
+                version_upper, "current-version"
+            )
             assert current_version_result.exit_code == 0
             assert current_version_result.output == expected_new_version + "\n"
 
             # check current-semantic-version command output
             current_version_result = runner.invoke(
-                cli, "current-semantic-version"
+                version_upper, "current-semantic-version"
             )
             assert current_version_result.exit_code == 0
             assert (
@@ -606,7 +608,7 @@ def test_bump_rc_release_candidate():
         old_version=None,
         expected_exit_code=2,
         expected_output=(
-            "Usage: cli bump [OPTIONS] [major|minor|patch|rc|commit_hash]\n\n"
+            "Usage: version-upper bump [OPTIONS] [major|minor|patch|rc|commit_hash]\n\n"
             "Error: Cannot use --release-candidate when bumping rc\n"
         ),
         files_should_not_change=True,
@@ -630,7 +632,7 @@ def test_release_rc():
 def test_no_config_file_bump():
     runner = CliRunner()
     with runner.isolated_filesystem():
-        result = runner.invoke(cli, ["bump"])
+        result = runner.invoke(version_upper, ["bump"])
         assert result.exit_code == 1
         assert (
             f"Error: Could not open file {DEFAULT_CONFIG_FILE}"
@@ -640,7 +642,7 @@ def test_no_config_file_bump():
 
 def test_no_config_file_config_schema():
     runner = CliRunner()
-    result = runner.invoke(cli, ["config-schema"])
+    result = runner.invoke(version_upper, ["config-schema"])
     assert result.exit_code == 0
     assert json.loads(result.output) == Config.schema()
 
@@ -648,7 +650,7 @@ def test_no_config_file_config_schema():
 def test_no_config_file_current_semantic_version():
     runner = CliRunner()
     with runner.isolated_filesystem():
-        result = runner.invoke(cli, ["current-semantic-version"])
+        result = runner.invoke(version_upper, ["current-semantic-version"])
         assert result.exit_code == 1
         assert (
             f"Error: Could not open file {DEFAULT_CONFIG_FILE}"
@@ -659,7 +661,7 @@ def test_no_config_file_current_semantic_version():
 def test_no_config_file_current_version():
     runner = CliRunner()
     with runner.isolated_filesystem():
-        result = runner.invoke(cli, ["current-version"])
+        result = runner.invoke(version_upper, ["current-version"])
         assert result.exit_code == 1
         assert (
             f"Error: Could not open file {DEFAULT_CONFIG_FILE}"
@@ -670,7 +672,7 @@ def test_no_config_file_current_version():
 def test_no_config_file_release():
     runner = CliRunner()
     with runner.isolated_filesystem():
-        result = runner.invoke(cli, ["release"])
+        result = runner.invoke(version_upper, ["release"])
         assert result.exit_code == 1
         assert (
             f"Error: Could not open file {DEFAULT_CONFIG_FILE}"
@@ -681,7 +683,7 @@ def test_no_config_file_release():
 def test_no_config_file_sample_config():
     runner = CliRunner()
     with runner.isolated_filesystem():
-        result = runner.invoke(cli, ["sample-config"])
+        result = runner.invoke(version_upper, ["sample-config"])
         assert result.exit_code == 0
         config = Config(**json.loads(result.output))
         assert isinstance(config, Config)
@@ -728,9 +730,9 @@ def test_bump_invalid_part():
         old_version=None,
         expected_exit_code=2,
         expected_output=(
-            "Usage: cli bump [OPTIONS] "
+            "Usage: version-upper bump [OPTIONS] "
             "[major|minor|patch|rc|commit_hash]\n"
-            "Try 'cli bump --help' for help.\n\n"
+            "Try 'version-upper bump --help' for help.\n\n"
             "Error: Invalid value for '[major|minor|patch|rc|commit_hash]': "
             "invalid choice: asdf. (choose from major, minor, patch, rc, "
             "commit_hash)\n"

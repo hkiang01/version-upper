@@ -104,34 +104,34 @@ class VersionUpper(object):
 )
 @click.option("--config", default=DEFAULT_CONFIG_FILE, show_default=True)
 @click.pass_context
-def cli(ctx, config: str):
+def version_upper(ctx, config: str):
     if ctx.invoked_subcommand not in ["config-schema", "sample-config"]:
         ctx.obj = VersionUpper(config_path=config)
 
 
-@cli.command(help="Prints the config schema in JSON")
+@version_upper.command(help="Prints the config schema in JSON")
 def config_schema() -> None:
     click.echo(Config.schema_json())
 
 
-@cli.command(help="Prints a sample config")
+@version_upper.command(help="Prints a sample config")
 def sample_config() -> None:
     click.echo(Config().json(indent=2))
 
 
-@cli.command(help="Prints the current version")
+@version_upper.command(help="Prints the current version")
 @click.pass_obj
 def current_version(version_upper: VersionUpper) -> None:
     click.echo(version_upper.config.current_version)
 
 
-@cli.command(help="Prints the current semantic version")
+@version_upper.command(help="Prints the current semantic version")
 @click.pass_obj
 def current_semantic_version(version_upper: VersionUpper) -> None:
     click.echo(version_upper.config.current_semantic_version)
 
 
-@cli.command(help="Removes rc from the version strings")
+@version_upper.command(help="Removes rc from the version strings")
 @click.pass_obj
 def release(version_upper: VersionUpper) -> None:
     config = version_upper.config
@@ -253,7 +253,7 @@ def __bump_semantic(
     __replace_version_strings(version_upper, new_version, new_semantic_version)
 
 
-@cli.command(help=("Bumps version strings, updates config."))
+@version_upper.command(help=("Bumps version strings, updates config."))
 @click.option(
     "--release-candidate",
     help="If semantic version being bumped is to be a release candidate.",
@@ -279,4 +279,4 @@ def bump(
 
 
 if __name__ == "__main__":
-    cli()
+    version_upper()
