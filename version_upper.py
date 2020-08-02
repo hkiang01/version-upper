@@ -233,6 +233,11 @@ def __bump_semantic(
         new_semantic_version = f"{major}.{minor}.{patch+1}"
         new_version = new_semantic_version
     elif part == BumpPart.rc:
+        if release_candidate:
+            raise click.BadOptionUsage(
+                "release-candidate",
+                "Cannot use --release-candidate when bumping rc",
+            )
         current_version = config.current_version
         if "rc" not in current_version:
             new_version = current_version + "rc1"

@@ -45,11 +45,11 @@ def bump_test_helper(
     version_file: str,
     cli_args: List[str],
     old_version: Optional[str],
-    expected_new_semantic_version: str,
-    expected_new_version: str = None,
-    expected_exit_code: int = 0,
-    expected_output: str = None,
-    files_should_not_change: bool = False,
+    expected_exit_code: Optional[int] = 0,
+    expected_output: Optional[str] = None,
+    files_should_not_change: Optional[bool] = False,
+    expected_new_semantic_version: Optional[str] = None,
+    expected_new_version: Optional[str] = None,
 ):
     """Helper to facilitate testing
 
@@ -76,14 +76,6 @@ def bump_test_helper(
     old_version : Optional[str]
         The old version that should not remain in version_file
         or in current_version in the config file after-the-fact
-    expected_new_semantic_version : str
-        The new semantic version that should replace the old semantic version
-        in version_file and in current_semantic_version in the config.
-    expected_new_version : str, optional
-        The new version that should replace the old version in version_file
-        and in current_version in the config. If not specified, then it will be
-        the commit hash of the initial commit of the newly created git repo.
-        By default None
     expected_exit_code : int, optional
         The expected status code of running cli with cli_args,
         by default 0
@@ -97,6 +89,17 @@ def bump_test_helper(
         If False, will check that the expected changes to config_file
         and version_file have been made,
         by default False
+    expected_new_semantic_version : str, optional
+        The new semantic version that should replace the old semantic version
+        in version_file and in current_semantic_version in the config.
+        Only checked if files_should_not_change is False
+        by default None
+    expected_new_version : str, optional
+        The new version that should replace the old version in version_file
+        and in current_version in the config. If not specified, then it will be
+        the commit hash of the initial commit of the newly created git repo.
+        Only checked if files_should_not_change is False
+        By default None
     """
     # load version file
     with open(version_file) as f:
@@ -552,73 +555,24 @@ def test_bump_major(
     ),
     [
         ("default.json", None, ["bump", "rc"], "0.0.0", "0.0.0rc1"),
-        (
-            "default.json",
-            None,
-            ["bump", "rc", "--release-candidate"],
-            "0.0.0",
-            "0.0.0rc1",
-        ),
         ("existing_major.json", None, ["bump", "rc"], "1.0.0", "1.0.0rc1",),
-        (
-            "existing_major.json",
-            None,
-            ["bump", "rc", "--release-candidate"],
-            "1.0.0",
-            "1.0.0rc1",
-        ),
         (
             "existing_major_minor.json",
             None,
             ["bump", "rc"],
-            "1.1.0",
-            "1.1.0rc1",
-        ),
-        (
-            "existing_major_minor.json",
-            None,
-            ["bump", "rc", "--release-candidate"],
             "1.1.0",
             "1.1.0rc1",
         ),
         ("existing_minor.json", None, ["bump", "rc"], "0.1.0", "0.1.0rc1",),
         (
-            "existing_minor.json",
-            None,
-            ["bump", "rc", "--release-candidate"],
-            "0.1.0",
-            "0.1.0rc1",
-        ),
-        (
             "existing_minor_patch.json",
             None,
             ["bump", "rc"],
             "0.1.1",
             "0.1.1rc1",
         ),
-        (
-            "existing_minor_patch.json",
-            None,
-            ["bump", "rc", "--release-candidate"],
-            "0.1.1",
-            "0.1.1rc1",
-        ),
         ("existing_patch.json", None, ["bump", "rc"], "0.0.1", "0.0.1rc1",),
-        (
-            "existing_patch.json",
-            None,
-            ["bump", "rc", "--release-candidate"],
-            "0.0.1",
-            "0.0.1rc1",
-        ),
         ("rc.json", "0.0.0rc1", ["bump", "rc"], "0.0.0", "0.0.0rc2",),
-        (
-            "rc.json",
-            "0.0.0rc1",
-            ["bump", "rc", "--release-candidate"],
-            "0.0.0",
-            "0.0.0rc2",
-        ),
     ],
 )
 def test_bump_rc(
@@ -638,6 +592,23 @@ def test_bump_rc(
         old_version=old_version,
         expected_new_semantic_version=expected_new_semantic_version,
         expected_new_version=expected_new_version,
+    )
+
+
+def test_bump_rc_release_candidate():
+    version_file = "tests/sample_version_files/default.json"
+    config_file = "tests/sample_configs/default.json"
+    bump_test_helper(
+        version_file=version_file,
+        config_file=config_file,
+        cli_args=["bump", "rc", "--release-candidate"],
+        old_version=None,
+        expected_exit_code=2,
+        expected_output=(
+            "Usage: cli bump [OPTIONS] [major|minor|patch|rc|commit_hash]\n\n"
+            "Error: Cannot use --release-candidate when bumping rc\n"
+        ),
+        files_should_not_change=True,
     )
 
 
@@ -723,8 +694,6 @@ def test_illegal_release():
         config_file=config_file,
         cli_args=["release"],
         old_version=None,
-        expected_new_semantic_version="0.0.0",
-        expected_new_version="0.0.0",
         expected_exit_code=1,
         expected_output=(
             "Error: Unable to release if current version does not contain rc\n"
@@ -742,7 +711,6 @@ def test_config_current_version_not_present_bump(part):
         config_file=config_file,
         cli_args=["bump", part],
         old_version=None,
-        expected_new_semantic_version="0.0.0",
         expected_exit_code=1,
         expected_output=("Error: Unable to find 0.0.0 in commit_hash.json\n"),
         files_should_not_change=True,
