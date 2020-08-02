@@ -1,6 +1,7 @@
 coveralls>=2.1.1,<2.2.0
 ipython
 pytest>=5.4.3,<5.5.0
+rope>=0.17.0,<0.18.0
 setuptools
 wheel
 twine
