@@ -272,10 +272,8 @@ def bump(
             )
         __bump_commit_hash(version_upper)
 
-    elif part in [BumpPart.major, BumpPart.minor, BumpPart.patch, BumpPart.rc]:
-        __bump_semantic(version_upper, part, release_candidate)
     else:
-        raise RuntimeError(f"Invalid part {part}")
+        __bump_semantic(version_upper, part, release_candidate)
 
 
 if __name__ == "__main__":
