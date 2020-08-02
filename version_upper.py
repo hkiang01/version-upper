@@ -2,6 +2,7 @@ import json
 import logging
 import re
 import subprocess
+import sys
 from enum import Enum
 from typing import List, Union
 
@@ -104,51 +105,45 @@ class VersionUpper(object):
 )
 @click.option("--config", default=DEFAULT_CONFIG_FILE, show_default=True)
 @click.pass_context
-def cli(ctx, config: str):
+def version_upper(ctx, config: str):
     if ctx.invoked_subcommand not in ["config-schema", "sample-config"]:
         ctx.obj = VersionUpper(config_path=config)
 
 
-@cli.command(help="Prints the config schema in JSON")
+@version_upper.command(help="Prints the config schema in JSON")
 def config_schema() -> None:
     click.echo(Config.schema_json())
 
 
-@cli.command(help="Prints a sample config")
+@version_upper.command(help="Prints a sample config")
 def sample_config() -> None:
     click.echo(Config().json(indent=2))
 
 
-@cli.command(help="Prints the current version")
+@version_upper.command(help="Prints the current version")
 @click.pass_obj
 def current_version(version_upper: VersionUpper) -> None:
     click.echo(version_upper.config.current_version)
 
 
-@cli.command(help="Prints the current semantic version")
+@version_upper.command(help="Prints the current semantic version")
 @click.pass_obj
 def current_semantic_version(version_upper: VersionUpper) -> None:
     click.echo(version_upper.config.current_semantic_version)
 
 
-@cli.command(help="Removes rc from the version strings")
+@version_upper.command(help="Removes rc from the version strings")
 @click.pass_obj
 def release(version_upper: VersionUpper) -> None:
     config = version_upper.config
     current_version = config.current_version
-    commit_hash_pattern = re.compile(r"[\da-f]{40}")
-    if commit_hash_pattern.search(current_version):
-        logger.error("Cannot release if current verison is a commit hash")
-        exit(1)
-
     rc_pattern = re.compile(r"\d+\.\d+\.\d+rc(\d+)")
     if rc_pattern.search(current_version) is None:
-        logger.error(
+        raise click.ClickException(
             "Unable to release if current version does not contain rc"
         )
-        exit(1)
 
-    new_version_pattern = re.compile(r"(\d+\.\d+\.\d+)rc1")
+    new_version_pattern = re.compile(r"(\d+\.\d+\.\d+)rc.*")
     new_version = new_version_pattern.search(current_version).group(1)
     __replace_version_strings(version_upper, new_version, new_version)
 
@@ -175,8 +170,7 @@ def __replace_version_strings(
         with open(f, "r") as fp:
             old_content = fp.read()
         if old_version not in old_content:
-            logger.error(f"Unable to find {old_version} in {f}")
-            exit(1)
+            raise click.ClickException(f"Unable to find {old_version} in {f}")
         new_content = old_content.replace(old_version, new_version)
         with open(f, "w") as fp:
             fp.write(new_content)
@@ -221,6 +215,13 @@ def __bump_semantic(
     release_candidate : bool, optional
         If specified, will designate the bumped version as a release candidate.
     """
+
+    if part == BumpPart.rc and release_candidate:
+        raise click.BadOptionUsage(
+            "release-candidate",
+            "Cannot use --release-candidate when bumping rc",
+        )
+
     config = version_upper.config
     current_semantic_version = config.current_semantic_version
     major_pattern = re.compile(r"(\d+)\.\d+\.\d+")
@@ -239,7 +240,7 @@ def __bump_semantic(
     elif part == BumpPart.patch:
         new_semantic_version = f"{major}.{minor}.{patch+1}"
         new_version = new_semantic_version
-    elif part == BumpPart.rc:
+    else:
         current_version = config.current_version
         if "rc" not in current_version:
             new_version = current_version + "rc1"
@@ -248,15 +249,12 @@ def __bump_semantic(
             rc = int(rc_pattern.search(current_version).group(1))
             new_version = current_semantic_version + f"rc{rc+1}"
         new_semantic_version = f"{major}.{minor}.{patch}"
-    else:
-        logger.error(f"Invalid part {part}")
-        exit(1)
-    if release_candidate and not part == BumpPart.rc:
+    if release_candidate:
         new_version = new_version + "rc1"
     __replace_version_strings(version_upper, new_version, new_semantic_version)
 
 
-@cli.command(help=("Bumps version strings, updates config."))
+@version_upper.command(help=("Bumps version strings, updates config."))
 @click.option(
     "--release-candidate",
     help="If semantic version being bumped is to be a release candidate.",
@@ -269,17 +267,19 @@ def bump(
 ) -> None:
     if part == BumpPart.commit_hash:
         if release_candidate:
-            logger.error(
-                "Cannot make a release candidate out of a commit_hash bump"
+            raise click.BadOptionUsage(
+                "release-candidate",
+                "Cannot use --release-candidate when bumping commit_hash",
             )
-            exit(1)
         __bump_commit_hash(version_upper)
 
-    elif part in [BumpPart.major, BumpPart.minor, BumpPart.patch, BumpPart.rc]:
-        __bump_semantic(version_upper, part, release_candidate)
     else:
-        raise RuntimeError(f"Invalid part {part}")
+        __bump_semantic(version_upper, part, release_candidate)
 
 
-if __name__ == "__main__":
-    cli()
+def init():
+    if __name__ == "__main__":
+        sys.exit(version_upper())
+
+
+init()
