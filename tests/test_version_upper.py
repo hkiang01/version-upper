@@ -716,3 +716,24 @@ def test_config_current_version_not_present_bump(part):
         expected_output=("Error: Unable to find 0.0.0 in commit_hash.json\n"),
         files_should_not_change=True,
     )
+
+
+def test_bump_invalid_part():
+    version_file = "tests/sample_version_files/default.json"
+    config_file = "tests/sample_configs/default.json"
+    bump_test_helper(
+        version_file=version_file,
+        config_file=config_file,
+        cli_args=["bump", "asdf"],
+        old_version=None,
+        expected_exit_code=2,
+        expected_output=(
+            "Usage: cli bump [OPTIONS] "
+            "[major|minor|patch|rc|commit_hash]\n"
+            "Try 'cli bump --help' for help.\n\n"
+            "Error: Invalid value for '[major|minor|patch|rc|commit_hash]': "
+            "invalid choice: asdf. (choose from major, minor, patch, rc, "
+            "commit_hash)\n"
+        ),
+        files_should_not_change=True,
+    )

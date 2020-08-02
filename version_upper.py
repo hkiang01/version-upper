@@ -247,8 +247,7 @@ def __bump_semantic(
             new_version = current_semantic_version + f"rc{rc+1}"
         new_semantic_version = f"{major}.{minor}.{patch}"
     else:
-        logger.error(f"Invalid part {part}")
-        exit(1)
+        raise click.BadParameter("")
     if release_candidate and not part == BumpPart.rc:
         new_version = new_version + "rc1"
     __replace_version_strings(version_upper, new_version, new_semantic_version)
