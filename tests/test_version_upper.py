@@ -4,6 +4,7 @@ import pathlib
 import subprocess
 from typing import List, Optional
 
+import mock
 import pytest
 from click.testing import CliRunner
 
@@ -761,5 +762,11 @@ def test_bump_invalid_part():
 
 
 def test_main():
-    output = subprocess.check_output(["python", "version_upper.py"]).decode()
-    assert output.startswith("Usage: ")
+    # see https://medium.com/opsops/how-to-test-if-name-main-1928367290cb
+    import version_upper  # noqa: F401
+
+    with mock.patch.object(version_upper, "version_upper", return_value=42):
+        with mock.patch.object(version_upper, "__name__", "__main__"):
+            with mock.patch.object(version_upper.sys, "exit") as mock_exit:
+                version_upper.init()
+                assert mock_exit.call_args[0][0] == 42

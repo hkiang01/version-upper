@@ -2,6 +2,7 @@ import json
 import logging
 import re
 import subprocess
+import sys
 from enum import Enum
 from typing import List, Union
 
@@ -276,5 +277,9 @@ def bump(
         __bump_semantic(version_upper, part, release_candidate)
 
 
-if __name__ == "__main__":
-    version_upper()
+def init():
+    if __name__ == "__main__":
+        sys.exit(version_upper())
+
+
+init()
