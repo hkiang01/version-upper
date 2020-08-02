@@ -214,6 +214,13 @@ def __bump_semantic(
     release_candidate : bool, optional
         If specified, will designate the bumped version as a release candidate.
     """
+
+    if part == BumpPart.rc and release_candidate:
+        raise click.BadOptionUsage(
+            "release-candidate",
+            "Cannot use --release-candidate when bumping rc",
+        )
+
     config = version_upper.config
     current_semantic_version = config.current_semantic_version
     major_pattern = re.compile(r"(\d+)\.\d+\.\d+")
@@ -232,12 +239,7 @@ def __bump_semantic(
     elif part == BumpPart.patch:
         new_semantic_version = f"{major}.{minor}.{patch+1}"
         new_version = new_semantic_version
-    elif part == BumpPart.rc:
-        if release_candidate:
-            raise click.BadOptionUsage(
-                "release-candidate",
-                "Cannot use --release-candidate when bumping rc",
-            )
+    else:
         current_version = config.current_version
         if "rc" not in current_version:
             new_version = current_version + "rc1"
@@ -246,9 +248,7 @@ def __bump_semantic(
             rc = int(rc_pattern.search(current_version).group(1))
             new_version = current_semantic_version + f"rc{rc+1}"
         new_semantic_version = f"{major}.{minor}.{patch}"
-    else:
-        raise click.BadParameter("")
-    if release_candidate and not part == BumpPart.rc:
+    if release_candidate:
         new_version = new_version + "rc1"
     __replace_version_strings(version_upper, new_version, new_semantic_version)
 
