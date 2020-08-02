@@ -266,10 +266,10 @@ def bump(
 ) -> None:
     if part == BumpPart.commit_hash:
         if release_candidate:
-            logger.error(
-                "Cannot make a release candidate out of a commit_hash bump"
+            raise click.BadOptionUsage(
+                "release-candidate",
+                "Cannot use --release-candidate when bumping commit_hash",
             )
-            exit(1)
         __bump_commit_hash(version_upper)
 
     elif part in [BumpPart.major, BumpPart.minor, BumpPart.patch, BumpPart.rc]:

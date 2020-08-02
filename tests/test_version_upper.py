@@ -221,6 +221,24 @@ def test_bump_commit_hash(
     )
 
 
+def test_bump_commit_hash_release_candidate():
+    version_file = "tests/sample_version_files/commit_hash.json"
+    config_file = "tests/sample_configs/commit_hash.json"
+    bump_test_helper(
+        version_file=version_file,
+        config_file=config_file,
+        cli_args=["bump", "commit_hash", "--release-candidate"],
+        old_version=None,
+        expected_exit_code=2,
+        expected_output=(
+            "Usage: version-upper bump [OPTIONS] "
+            "[major|minor|patch|rc|commit_hash]\n\n"
+            "Error: Cannot use --release-candidate when bumping commit_hash\n"
+        ),
+        files_should_not_change=True,
+    )
+
+
 @pytest.mark.parametrize(
     (
         "paired_test_files_name,old_version,cli_args,"
@@ -608,7 +626,8 @@ def test_bump_rc_release_candidate():
         old_version=None,
         expected_exit_code=2,
         expected_output=(
-            "Usage: version-upper bump [OPTIONS] [major|minor|patch|rc|commit_hash]\n\n"
+            "Usage: version-upper bump [OPTIONS] "
+            "[major|minor|patch|rc|commit_hash]\n\n"
             "Error: Cannot use --release-candidate when bumping rc\n"
         ),
         files_should_not_change=True,
