@@ -758,3 +758,8 @@ def test_bump_invalid_part():
         ),
         files_should_not_change=True,
     )
+
+
+def test_main():
+    output = subprocess.check_output(["python", "version_upper.py"]).decode()
+    assert output.startswith("Usage: ")
