@@ -36,10 +36,6 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        # required to be able to initialize a git repo, which is part of the use case and therefore the tests
-        git config --global user.email you@example.com
-        git config --global user.name Your Name
-
         # Run tests and
         coverage run -m pytest tests/
         # Submit coverage to coveralls
