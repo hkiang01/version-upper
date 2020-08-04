@@ -37,7 +37,7 @@ jobs:
         # required to be able to initialize a git repo, which is part of the use case and therefore the tests
         git config --global user.email you@example.com
         git config --global user.name Your Name
-        pytest
+        coverage run -m pytest tests/
     - name: Coveralls GitHub Action
       uses: coverallsapp/github-action@v1.1.1
       with:
