@@ -38,3 +38,6 @@ jobs:
         git config --global user.email you@example.com
         git config --global user.name Your Name
         pytest
+    - name: Coveralls GitHub Action
+        uses: coverallsapp/github-action@v1.1.1
+      
