@@ -31,6 +31,12 @@ def __init_repo_with_version(file_name: str, content: str) -> str:
     """
     with open(file_name, "w") as f:
         f.write(content)
+    subprocess.check_call(
+        ["git", "config", "--global", "user.email", "you@example.com"]
+    )
+    subprocess.check_call(
+        ["git", "config", "--global", "user.name", "Your Name"]
+    )
     subprocess.check_call(["git", "init"])
     subprocess.check_call(["git", "add", file_name])
     subprocess.check_call(["git", "commit", "-m", "'initial commit'"])

@@ -1,4 +1,5 @@
 coveralls>=2.1.1,<2.2.0
+flake8>=3.8.3,<3.9.0
 ipython
 mock>=4.0.2,<4.1.0
 pytest>=5.4.3,<5.5.0
