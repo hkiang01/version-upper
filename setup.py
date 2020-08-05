@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="version-upper",  # Replace with your own username
-    version="0.1.1",
+    version="0.2.0",
     author="Harrison Kiang",
     author_email="hkiang01@gmail.com",
     description="Bump version strings in your repo",
