@@ -1,10 +1,16 @@
 # This workflow will install Python dependencies, run tests and lint with a variety of Python versions
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
 
-name: Python package
+name: tests
 
 # Trigger the workflow on push or pull request
-on: [push, pull_request]
+# Also trigger daily on the master branch
+on:
+  push: {}
+  pull_request: {}
+  schedule:
+    # every day at 10pm UTC (5pm Central Time)
+    - cron: '0 22 * * *'
 
 jobs:
   build:

@@ -1,5 +1,7 @@
 {
     "current_version": "0.0.1",
     "current_semantic_version": "0.0.1",
-    "files": []
+    "files": [
+        "tests/sample_files/existing_patch.json"
+    ]
 }

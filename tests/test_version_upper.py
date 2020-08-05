@@ -1,6 +1,8 @@
 import json
 import logging
+import os
 import pathlib
+import requests
 import subprocess
 from typing import List, Optional
 
@@ -8,19 +10,25 @@ import mock
 import pytest
 from click.testing import CliRunner
 
-from version_upper import DEFAULT_CONFIG_FILE, BumpPart, Config, version_upper
+from version_upper import (
+    DEFAULT_CONFIG_FILE,
+    BumpPart,
+    Config,
+    SearchPattern,
+    version_upper,
+)
 
 logger = logging.getLogger(__name__)
 
 
-def __init_repo_with_version(file_name: str, content: str) -> str:
+def __init_repo_with_version(path: str, content: str) -> str:
     """Creates a git repo in the current directory,
     and creates a commit with a sample file
 
     Parameters
     ----------
     file_name : str
-        The file to include in the initial commit
+        The path of the file to include in the initial commit
     contents : str
         The contents in the file included in the initial commit
 
@@ -29,7 +37,8 @@ def __init_repo_with_version(file_name: str, content: str) -> str:
     str
         The commit hash of the initial commit
     """
-    with open(file_name, "w") as f:
+    os.makedirs(pathlib.Path(path).parent)
+    with open(path, "w") as f:
         f.write(content)
     subprocess.check_call(
         ["git", "config", "--global", "user.email", "you@example.com"]
@@ -38,18 +47,17 @@ def __init_repo_with_version(file_name: str, content: str) -> str:
         ["git", "config", "--global", "user.name", "Your Name"]
     )
     subprocess.check_call(["git", "init"])
-    subprocess.check_call(["git", "add", file_name])
+    subprocess.check_call(["git", "add", path])
     subprocess.check_call(["git", "commit", "-m", "'initial commit'"])
     commit_hash = subprocess.check_output(
         ["git", "log", "-n1", "--format=format:%H"]
     ).decode()
-    logger.debug(f"Initialized repo with {file_name} at commit {commit_hash}")
+    logger.debug(f"Initialized repo with {path} at commit {commit_hash}")
     return commit_hash
 
 
 def bump_test_helper(
     config_file: str,
-    version_file: str,
     cli_args: List[str],
     expected_exit_code: Optional[int] = 0,
     expected_output: Optional[str] = None,
@@ -57,27 +65,26 @@ def bump_test_helper(
     expected_new_semantic_version: Optional[str] = None,
     expected_new_version: Optional[str] = None,
     old_version: Optional[str] = None,
-):
+) -> str:
     """Helper to facilitate testing
 
     Runs cli command in isolated filesystem with the following setup:
-        1. version_file is added to a new git repo
-        2. config file is loaded with the version_file added
+        1. The file specified in "files" in the config_file
+           is added to a new git repo
+        2. config file is loaded with the file added
 
     After running the cli command, the following checks are made:
         1. Instances of old_version (if defined) are replaced
-           with the expcted new version in version_file.
+           with the expcted new version in the file specified in "files"
+           in the config_file.
         2. Only current_version and current_semantic_version are changed
            in the config, and that they match the expected values
            (Note the cli implicitly performs validation using Pydnatic).
-
 
     Parameters
     ----------
     config_file : str
         The config file to use in the test
-    version_file : str
-        The version file to use in the test (will be added to the config)
     cli_args : List[str]
         The args to pass to cli to bump version
     expected_exit_code : int, optional
@@ -89,93 +96,108 @@ def bump_test_helper(
         by default None
     files_should_not_change : Optional[bool]
         If True, will check to make sure the file contents of config_file
-        and version_file have not changed after running cli with cli_args.
+        and file specified in "files" in the config_file
+        have not changed after running cli with cli_args.
         If False, will check that the expected changes to config_file
-        and version_file have been made,
+        and the file specified in "files" in the config_file have been made,
         by default False
     expected_new_semantic_version : Optional[str]
         The new semantic version that should replace the old semantic version
-        in version_file and in current_semantic_version in the config.
+        in the file specified in "files" in the config_file
+        and in current_semantic_version in the config.
         Only checked if files_should_not_change is False
         by default None
     expected_new_version : Optional[str]
-        The new version that should replace the old version in version_file
+        The new version that should replace the old version
+        in the file specified in "files" in the config_file
         and in current_version in the config. If not specified, then it will be
         the commit hash of the initial commit of the newly created git repo.
         Only checked if files_should_not_change is False
         By default None
     old_version : Optional[str]
-        The old version that should not remain in version_file
+        The old version that should not remain
+        in the file specified in "files" in the config_file
         or in current_version in the config file after-the-fact,
         by default None
+
+    Returns
+    -------
+    str
+        The content of the file specified in "files" in the config_file
+        after version_upper has run with cli_args
     """
-    # load version file
-    with open(version_file) as f:
-        version_file_contents = f.read()
     # load config
     with open(config_file) as f:
-        config_file_contents = json.load(f)
+        config_file_dict = json.load(f)
+
+    # validate config
+    Config(**config_file_dict)
+
+    files = config_file_dict["files"]
+    assert len(files) == 1, (
+        "Expecting only a single file. "
+        "Feel free to update all the tests to accommodate more"
+    )
+    curr_file = files[0]
+    if isinstance(curr_file, dict):
+        curr_file = curr_file["path"]
+
+    # load file
+    with open(curr_file) as f:
+        curr_file_contents = f.read()
 
     # load old config values (to test against config file after cli is run)
-    old_files = config_file_contents["files"]
-    version_file_name = pathlib.Path(version_file).name
-    old_files.append(version_file_name)
+    # this list should not change
+    old_files = config_file_dict["files"]
 
     runner = CliRunner()
     with runner.isolated_filesystem():
-        # create git repo with version file in fs
-        commit_hash = __init_repo_with_version(
-            version_file_name, version_file_contents
-        )
+        # create git repo with file in fs
+        commit_hash = __init_repo_with_version(curr_file, curr_file_contents)
         if expected_new_version is None:
             expected_new_version = commit_hash
-        logger.debug(f"version_file_contents before:\n{version_file_contents}")
+        logger.debug(f"curr_file_contents before:\n{curr_file_contents}")
         # create config file in fs
-        config_file_contents["files"] = [version_file_name]
-        logger.debug(f"config_file_contents before:\n{config_file_contents}")
+        logger.debug(f"config_file_contents before:\n{config_file_dict}")
         with open(DEFAULT_CONFIG_FILE, "w") as f:
-            json.dump(config_file_contents, f)
+            json.dump(config_file_dict, f)
 
         # run command
         logger.debug(f"Running {cli_args}")
-        result = runner.invoke(version_upper, cli_args)
+        result = runner.invoke(version_upper, cli_args, catch_exceptions=False)
         assert result.exit_code == expected_exit_code
         if expected_output:
             assert result.output == expected_output
 
         if files_should_not_change:
-            with open(version_file_name) as f:
-                new_version_file_contents = f.read()
-                assert new_version_file_contents == version_file_contents
+            with open(curr_file) as f:
+                new_curr_file_contents = f.read()
+                assert new_curr_file_contents == curr_file_contents
             with open(DEFAULT_CONFIG_FILE) as f:
                 new_config_file_contents = json.load(f)
-                assert new_config_file_contents == config_file_contents
+                assert new_config_file_contents == config_file_dict
         else:
             # check config file
-            del config_file_contents
+            del config_file_dict
             with open(DEFAULT_CONFIG_FILE) as f:
-                config_file_contents = json.load(f)
-            logger.debug(
-                f"config_file_contents after:\n{config_file_contents}"
-            )
-            assert config_file_contents["files"] == old_files
+                config_file_dict = json.load(f)
+            logger.debug(f"config_file_contents after:\n{config_file_dict}")
+            assert config_file_dict["files"] == old_files
+            assert config_file_dict["current_version"] == expected_new_version
             assert (
-                config_file_contents["current_version"] == expected_new_version
-            )
-            assert (
-                config_file_contents["current_semantic_version"]
+                config_file_dict["current_semantic_version"]
                 == expected_new_semantic_version
             )
 
-            # check version file
-            with open(version_file_name) as f:
-                version_file_contents = f.read()
+            # check file
+            with open(curr_file) as f:
+                new_curr_file_contents = f.read()
             logger.debug(
-                f"version_file_contents after:\n{version_file_contents}"
+                f"curr_file_contents after:\n{new_curr_file_contents}"
             )
-            assert expected_new_version in version_file_contents
+            assert expected_new_version in new_curr_file_contents
             if old_version:
-                assert old_version not in version_file_contents
+                assert old_version not in new_curr_file_contents
 
             # check current-version command output
             current_version_result = runner.invoke(
@@ -193,10 +215,11 @@ def bump_test_helper(
                 current_version_result.output
                 == expected_new_semantic_version + "\n"
             )
+    return new_curr_file_contents
 
 
 @pytest.mark.parametrize(
-    "paired_test_files_name,old_version,expected_new_semantic_version",
+    "config_file_name,old_version,expected_new_semantic_version",
     [
         (
             "commit_hash.json",
@@ -213,13 +236,11 @@ def bump_test_helper(
     ],
 )
 def test_bump_commit_hash(
-    paired_test_files_name, old_version, expected_new_semantic_version
+    config_file_name, old_version, expected_new_semantic_version
 ):
-    version_file = f"tests/sample_version_files/{paired_test_files_name}"
-    config_file = f"tests/sample_configs/{paired_test_files_name}"
+    config_file = f"tests/sample_configs/{config_file_name}"
 
     bump_test_helper(
-        version_file=version_file,
         config_file=config_file,
         cli_args=["bump", "commit_hash"],
         old_version=old_version,
@@ -229,10 +250,8 @@ def test_bump_commit_hash(
 
 
 def test_bump_commit_hash_release_candidate():
-    version_file = "tests/sample_version_files/commit_hash.json"
     config_file = "tests/sample_configs/commit_hash.json"
     bump_test_helper(
-        version_file=version_file,
         config_file=config_file,
         cli_args=["bump", "commit_hash", "--release-candidate"],
         old_version=None,
@@ -248,7 +267,7 @@ def test_bump_commit_hash_release_candidate():
 
 @pytest.mark.parametrize(
     (
-        "paired_test_files_name,old_version,cli_args,"
+        "config_file_name,old_version,cli_args,"
         "expected_new_semantic_version,expected_new_version"
     ),
     [
@@ -337,17 +356,15 @@ def test_bump_commit_hash_release_candidate():
     ],
 )
 def test_bump_patch(
-    paired_test_files_name,
+    config_file_name,
     cli_args,
     old_version,
     expected_new_semantic_version,
     expected_new_version,
 ):
-    version_file = f"tests/sample_version_files/{paired_test_files_name}"
-    config_file = f"tests/sample_configs/{paired_test_files_name}"
+    config_file = f"tests/sample_configs/{config_file_name}"
 
     bump_test_helper(
-        version_file=version_file,
         config_file=config_file,
         cli_args=cli_args,
         old_version=old_version,
@@ -358,7 +375,7 @@ def test_bump_patch(
 
 @pytest.mark.parametrize(
     (
-        "paired_test_files_name,old_version,cli_args,"
+        "config_file_name,old_version,cli_args,"
         "expected_new_semantic_version,expected_new_version"
     ),
     [
@@ -447,17 +464,15 @@ def test_bump_patch(
     ],
 )
 def test_bump_minor(
-    paired_test_files_name,
+    config_file_name,
     cli_args,
     old_version,
     expected_new_semantic_version,
     expected_new_version,
 ):
-    version_file = f"tests/sample_version_files/{paired_test_files_name}"
-    config_file = f"tests/sample_configs/{paired_test_files_name}"
+    config_file = f"tests/sample_configs/{config_file_name}"
 
     bump_test_helper(
-        version_file=version_file,
         config_file=config_file,
         cli_args=cli_args,
         old_version=old_version,
@@ -468,7 +483,7 @@ def test_bump_minor(
 
 @pytest.mark.parametrize(
     (
-        "paired_test_files_name,old_version,cli_args,"
+        "config_file_name,old_version,cli_args,"
         "expected_new_semantic_version,expected_new_version"
     ),
     [
@@ -557,17 +572,15 @@ def test_bump_minor(
     ],
 )
 def test_bump_major(
-    paired_test_files_name,
+    config_file_name,
     cli_args,
     old_version,
     expected_new_semantic_version,
     expected_new_version,
 ):
-    version_file = f"tests/sample_version_files/{paired_test_files_name}"
-    config_file = f"tests/sample_configs/{paired_test_files_name}"
+    config_file = f"tests/sample_configs/{config_file_name}"
 
     bump_test_helper(
-        version_file=version_file,
         config_file=config_file,
         cli_args=cli_args,
         old_version=old_version,
@@ -578,7 +591,7 @@ def test_bump_major(
 
 @pytest.mark.parametrize(
     (
-        "paired_test_files_name,old_version,cli_args,"
+        "config_file_name,old_version,cli_args,"
         "expected_new_semantic_version,expected_new_version"
     ),
     [
@@ -604,17 +617,15 @@ def test_bump_major(
     ],
 )
 def test_bump_rc(
-    paired_test_files_name,
+    config_file_name,
     cli_args,
     old_version,
     expected_new_semantic_version,
     expected_new_version,
 ):
-    version_file = f"tests/sample_version_files/{paired_test_files_name}"
-    config_file = f"tests/sample_configs/{paired_test_files_name}"
+    config_file = f"tests/sample_configs/{config_file_name}"
 
     bump_test_helper(
-        version_file=version_file,
         config_file=config_file,
         cli_args=cli_args,
         old_version=old_version,
@@ -624,10 +635,8 @@ def test_bump_rc(
 
 
 def test_bump_rc_release_candidate():
-    version_file = "tests/sample_version_files/default.json"
     config_file = "tests/sample_configs/default.json"
     bump_test_helper(
-        version_file=version_file,
         config_file=config_file,
         cli_args=["bump", "rc", "--release-candidate"],
         old_version=None,
@@ -642,11 +651,9 @@ def test_bump_rc_release_candidate():
 
 
 def test_release_rc():
-    version_file = "tests/sample_version_files/rc.json"
     config_file = "tests/sample_configs/rc.json"
 
     bump_test_helper(
-        version_file=version_file,
         config_file=config_file,
         cli_args=["release"],
         old_version="0.0.0rc1",
@@ -716,10 +723,8 @@ def test_no_config_file_sample_config():
 
 
 def test_illegal_release():
-    version_file = "tests/sample_version_files/default.json"
     config_file = "tests/sample_configs/default.json"
     bump_test_helper(
-        version_file=version_file,
         config_file=config_file,
         cli_args=["release"],
         old_version=None,
@@ -733,24 +738,22 @@ def test_illegal_release():
 
 @pytest.mark.parametrize("part", [bp.value for bp in BumpPart])
 def test_config_current_version_not_present_bump(part):
-    version_file = "tests/sample_version_files/commit_hash.json"
-    config_file = "tests/sample_configs/default.json"
+    config_file = "tests/sample_configs/not_present.json"
     bump_test_helper(
-        version_file=version_file,
         config_file=config_file,
         cli_args=["bump", part],
         old_version=None,
         expected_exit_code=1,
-        expected_output=("Error: Unable to find 0.0.0 in commit_hash.json\n"),
+        expected_output=(
+            "Error: Unable to find 0.0.0 in tests/sample_files/not_present.txt\n"
+        ),
         files_should_not_change=True,
     )
 
 
 def test_bump_invalid_part():
-    version_file = "tests/sample_version_files/default.json"
     config_file = "tests/sample_configs/default.json"
     bump_test_helper(
-        version_file=version_file,
         config_file=config_file,
         cli_args=["bump", "asdf"],
         old_version=None,
@@ -776,3 +779,39 @@ def test_main():
             with mock.patch.object(version_upper.sys, "exit") as mock_exit:
                 version_upper.init()
                 assert mock_exit.call_args[0][0] == 42
+
+
+@pytest.mark.skipif(
+    json.loads(
+        requests.get(
+            "https://api.github.com/repos/samuelcolvin/pydantic/issues/1269"
+        ).content
+    )["state"]
+    == "open",
+    reason=(
+        "Pydnatic has a bug where you can't get the schema of a BaseModel "
+        "if it has within it a field of type Pattern. "
+        "This will break the config-schema subcommand"
+    ),
+)
+def test_pydantic_bug_1269():
+    assert (
+        SearchPattern.schema()["properties"]["search_pattern"]["type"]
+        == "Pattern"
+    )
+
+
+def test_search():
+    config_file = "tests/sample_configs/chart.json"
+
+    bumped_file_contents = bump_test_helper(
+        config_file=config_file,
+        cli_args=["bump", "patch"],
+        old_version=None,
+        expected_new_semantic_version="1.16.1",
+        expected_new_version="1.16.1",
+    )
+
+    with open("tests/sample_files/Chart_after.yaml") as f:
+        expected_contents = f.read()
+    assert bumped_file_contents == expected_contents

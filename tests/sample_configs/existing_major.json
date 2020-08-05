@@ -1,5 +1,7 @@
 {
     "current_version": "1.0.0",
     "current_semantic_version": "1.0.0",
-    "files": []
+    "files": [
+        "tests/sample_files/existing_major.json"
+    ]
 }

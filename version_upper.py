@@ -7,11 +7,46 @@ from enum import Enum
 from typing import List, Union
 
 import click
-from pydantic import BaseModel, DirectoryPath, Field, FilePath
+from pydantic import BaseModel, DirectoryPath, Field, FilePath, validator
 
 logger = logging.getLogger(__name__)
 
 DEFAULT_CONFIG_FILE = "version-upper.json"
+CURRENT_VERSION_PATTERN = (
+    r"(?P<current_version>(\d+\.\d+\.\d+(rc\d+)?)|[a-f\d]{40})"
+)
+
+
+class SearchPattern(BaseModel):
+    path: str
+    # TODO: change SearchPattern.search_pattern type to typing.Pattern
+    # See test_pydantic_bug_1269() in tests/test_version_upper.py
+    search_pattern: str
+
+    @validator("search_pattern", pre=True)
+    def must_contain_current_pattern(cls, v):
+        f"""Replaces search_pattern with regex used to bump versions,
+        specifically a named capture group defined by the Config schema
+
+        This makes it easy for the user to define a search pattern.
+        For example, the following search_pattern:
+        ```
+        appVersion: {{current_version}}
+        ```
+        Will become this:
+        ```
+        appVersion: {CURRENT_VERSION_PATTERN}
+        ```
+
+        Parameters
+        ----------
+        v : Pattern
+            The new pattern with the named capture group
+        """
+        assert (
+            v.count("{current_version}") == 1
+        ), "search_pattern must have exactly 1 instance of '{current_version}'"
+        return v
 
 
 class Config(BaseModel):
@@ -20,7 +55,7 @@ class Config(BaseModel):
     current_version: str = Field(
         "0.0.0",
         description=("The current version"),
-        regex=r"(\d+\.\d+\.\d+(rc\d+)?)|[a-f\d]{40}",
+        regex=CURRENT_VERSION_PATTERN,
         examples=[
             "0.0.0",
             "0.0.0rc1",
@@ -32,7 +67,7 @@ class Config(BaseModel):
         description=("The current semantic version"),
         regex=r"\d+\.\d+\.\d+",
     )
-    files: List[Union[FilePath, DirectoryPath]] = Field(
+    files: List[Union[FilePath, DirectoryPath, SearchPattern]] = Field(
         [],
         description=(
             "Files and directories wherein version strings will be updated. "
@@ -167,17 +202,53 @@ def __replace_version_strings(
     """
     old_version = version_upper.config.current_version
     for f in version_upper.config.files:
-        with open(f, "r") as fp:
-            old_content = fp.read()
-        if old_version not in old_content:
-            raise click.ClickException(f"Unable to find {old_version} in {f}")
-        new_content = old_content.replace(old_version, new_version)
-        with open(f, "w") as fp:
-            fp.write(new_content)
+        if isinstance(f, SearchPattern):
+            curr_file = f.path
+            with open(curr_file, "r") as fp:
+                content = fp.read()
+
+            # prepare to search for the current version
+            # by prepping the pattern used to search for it
+            curr_search_pattern = f.search_pattern
+            curr_search_pattern = curr_search_pattern.replace(
+                "{current_version}", CURRENT_VERSION_PATTERN
+            )
+            curr_pattern = re.compile(curr_search_pattern)
+
+            # for every match against the `search_pattern` in `path`,
+            # replace the current_version named capture group
+            # with `new_version`
+            match = curr_pattern.search(content)
+            while (
+                match and match.groupdict()["current_version"] != new_version
+            ):
+                # get group index of the current_version named capture group
+                current_version_grp_idx = list(
+                    curr_pattern.groupindex.values()
+                )[0]
+
+                # get the positions of the substring to replace
+                # with `new_version`
+                (start, end) = match.span(current_version_grp_idx)
+                content = content[0:start] + new_version + content[end:]
+
+                match = curr_pattern.search(content)
+            with open(curr_file, "w") as fp:
+                fp.write(content)
+        else:
+            with open(f, "r") as fp:
+                content = fp.read()
+            if old_version not in content:
+                raise click.ClickException(
+                    f"Unable to find {old_version} in {f}"
+                )
+            new_content = content.replace(old_version, new_version)
+            with open(f, "w") as fp:
+                fp.write(new_content)
     version_upper.config.current_version = new_version
     if new_semantic_version:
         version_upper.config.current_semantic_version = new_semantic_version
-    with open(DEFAULT_CONFIG_FILE, "w") as f:
+    with open(version_upper.config_path, "w") as f:
         f.write(version_upper.config.json(indent=2))
 
 
