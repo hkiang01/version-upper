@@ -7,16 +7,47 @@ from enum import Enum
 from typing import List, Union
 
 import click
-from pydantic import BaseModel, DirectoryPath, Field, FilePath
+from pydantic import BaseModel, DirectoryPath, Field, FilePath, validator
 
 logger = logging.getLogger(__name__)
 
 DEFAULT_CONFIG_FILE = "version-upper.json"
+CURRENT_VERSION_PATTERN = (
+    r"(?P<current_version>(\d+\.\d+\.\d+(rc\d+)?)|[a-f\d]{40})"
+)
 
 
 class SearchPattern(BaseModel):
     path: str
+    # TODO: change SearchPattern.search_pattern type to typing.Pattern
+    # See test_pydantic_bug_1269() in tests/test_version_upper.py
     search_pattern: str
+
+    @validator("search_pattern", pre=True)
+    def must_contain_current_pattern(cls, v):
+        f"""Replaces search_pattern with regex used to bump versions,
+        specifically a named capture group defined by the Config schema
+
+        This makes it easy for the user to define a search pattern.
+        For example, the following search_pattern:
+        ```
+        appVersion: {{current_version}}
+        ```
+        Will become this:
+        ```
+        appVersion: {CURRENT_VERSION_PATTERN}
+        ```
+
+        Parameters
+        ----------
+        v : Pattern
+            The new pattern with the named capture group
+        """
+        assert (
+            v.count("{current_version}") == 1
+        ), "search_pattern must have exactly 1 instance of '{current_version}'"
+        v = v.replace("{current_version}", CURRENT_VERSION_PATTERN)
+        return v
 
 
 class Config(BaseModel):
@@ -25,7 +56,7 @@ class Config(BaseModel):
     current_version: str = Field(
         "0.0.0",
         description=("The current version"),
-        regex=r"(\d+\.\d+\.\d+(rc\d+)?)|[a-f\d]{40}",
+        regex=CURRENT_VERSION_PATTERN,
         examples=[
             "0.0.0",
             "0.0.0rc1",
@@ -37,7 +68,7 @@ class Config(BaseModel):
         description=("The current semantic version"),
         regex=r"\d+\.\d+\.\d+",
     )
-    files: List[Union[Union[FilePath, DirectoryPath], SearchPattern]] = Field(
+    files: List[Union[FilePath, DirectoryPath, SearchPattern]] = Field(
         [],
         description=(
             "Files and directories wherein version strings will be updated. "
@@ -172,13 +203,18 @@ def __replace_version_strings(
     """
     old_version = version_upper.config.current_version
     for f in version_upper.config.files:
-        with open(f, "r") as fp:
-            old_content = fp.read()
-        if old_version not in old_content:
-            raise click.ClickException(f"Unable to find {old_version} in {f}")
-        new_content = old_content.replace(old_version, new_version)
-        with open(f, "w") as fp:
-            fp.write(new_content)
+        if isinstance(f, SearchPattern):
+            raise NotImplementedError
+        else:
+            with open(f, "r") as fp:
+                old_content = fp.read()
+            if old_version not in old_content:
+                raise click.ClickException(
+                    f"Unable to find {old_version} in {f}"
+                )
+            new_content = old_content.replace(old_version, new_version)
+            with open(f, "w") as fp:
+                fp.write(new_content)
     version_upper.config.current_version = new_version
     if new_semantic_version:
         version_upper.config.current_semantic_version = new_semantic_version

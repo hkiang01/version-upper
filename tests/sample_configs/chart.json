@@ -4,7 +4,7 @@
     "files": [
         {
             "path": "tests/sample_files/Chart_before.yaml",
-            "search_pattern": "appVersion: current_version"
+            "search_pattern": "appVersion: {current_version}"
         }
     ]
 }

@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import pathlib
+import requests
 import subprocess
 from typing import List, Optional
 
@@ -9,7 +10,13 @@ import mock
 import pytest
 from click.testing import CliRunner
 
-from version_upper import DEFAULT_CONFIG_FILE, BumpPart, Config, version_upper
+from version_upper import (
+    DEFAULT_CONFIG_FILE,
+    BumpPart,
+    Config,
+    SearchPattern,
+    version_upper,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -772,6 +779,26 @@ def test_main():
             with mock.patch.object(version_upper.sys, "exit") as mock_exit:
                 version_upper.init()
                 assert mock_exit.call_args[0][0] == 42
+
+
+@pytest.mark.skipif(
+    json.loads(
+        requests.get(
+            "https://api.github.com/repos/samuelcolvin/pydantic/issues/1269"
+        ).content
+    )["state"]
+    == "open",
+    reason=(
+        "Pydnatic has a bug where you can't get the schema of a BaseModel "
+        "if it has within it a field of type Pattern. "
+        "This will break the config-schema subcommand"
+    ),
+)
+def test_pydantic_bug_1269():
+    assert (
+        SearchPattern.schema()["properties"]["search_pattern"]["type"]
+        == "Pattern"
+    )
 
 
 def test_search():
