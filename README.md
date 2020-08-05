@@ -1,6 +1,6 @@
 # version-upper
 
-![Python tests](https://github.com/hkiang01/version-upper/workflows/Python%20tests/badge.svg)
+[![Python tests](https://github.com/hkiang01/version-upper/workflows/Python%20tests/badge.svg)](https://github.com/hkiang01/version-upper/actions?query=workflow%3A%22Python+tests%22)
 [![Coverage Status](https://coveralls.io/repos/github/hkiang01/version-upper/badge.svg?branch=master&service=github)](https://coveralls.io/github/hkiang01/version-upper?branch=master&service=github)
 
 Primarily a reaction to [bumpversion](https://github.com/peritus/bumpversion) not supporting git hashes -- [issue](https://github.com/peritus/bumpversion/issues/125)
