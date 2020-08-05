@@ -164,7 +164,7 @@ def bump_test_helper(
 
         # run command
         logger.debug(f"Running {cli_args}")
-        result = runner.invoke(version_upper, cli_args)
+        result = runner.invoke(version_upper, cli_args, catch_exceptions=False)
         assert result.exit_code == expected_exit_code
         if expected_output:
             assert result.output == expected_output

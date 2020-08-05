@@ -204,15 +204,39 @@ def __replace_version_strings(
     old_version = version_upper.config.current_version
     for f in version_upper.config.files:
         if isinstance(f, SearchPattern):
-            raise NotImplementedError
+            curr_file = f.path
+            with open(curr_file, "r") as fp:
+                content = fp.read()
+            curr_pattern = re.compile(f.search_pattern)
+
+            # for every match against the `search_pattern` in `path`,
+            # replace the current_version named capture group
+            # with `new_version`
+            match = curr_pattern.search(content)
+            while (
+                match and match.groupdict()["current_version"] != new_version
+            ):
+                # get group index of the current_version named capture group
+                current_version_grp_idx = list(
+                    curr_pattern.groupindex.values()
+                )[0]
+
+                # get the positions of the substring to replace
+                # with `new_version`
+                (start, end) = match.span(current_version_grp_idx)
+                content = content[0:start] + new_version + content[end:]
+
+                match = curr_pattern.search(content)
+            with open(curr_file, "w") as fp:
+                fp.write(content)
         else:
             with open(f, "r") as fp:
-                old_content = fp.read()
-            if old_version not in old_content:
+                content = fp.read()
+            if old_version not in content:
                 raise click.ClickException(
                     f"Unable to find {old_version} in {f}"
                 )
-            new_content = old_content.replace(old_version, new_version)
+            new_content = content.replace(old_version, new_version)
             with open(f, "w") as fp:
                 fp.write(new_content)
     version_upper.config.current_version = new_version
