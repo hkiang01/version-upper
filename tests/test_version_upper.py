@@ -807,7 +807,7 @@ def test_search():
     bumped_file_contents = bump_test_helper(
         config_file=config_file,
         cli_args=["bump", "patch"],
-        old_version="1.16.0",
+        old_version=None,
         expected_new_semantic_version="1.16.1",
         expected_new_version="1.16.1",
     )

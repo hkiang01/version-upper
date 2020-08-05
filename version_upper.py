@@ -46,7 +46,6 @@ class SearchPattern(BaseModel):
         assert (
             v.count("{current_version}") == 1
         ), "search_pattern must have exactly 1 instance of '{current_version}'"
-        v = v.replace("{current_version}", CURRENT_VERSION_PATTERN)
         return v
 
 
@@ -207,7 +206,11 @@ def __replace_version_strings(
             curr_file = f.path
             with open(curr_file, "r") as fp:
                 content = fp.read()
-            curr_pattern = re.compile(f.search_pattern)
+            curr_search_pattern = f.search_pattern
+            curr_search_pattern = curr_search_pattern.replace(
+                "{current_version}", CURRENT_VERSION_PATTERN
+            )
+            curr_pattern = re.compile(curr_search_pattern)
 
             # for every match against the `search_pattern` in `path`,
             # replace the current_version named capture group
@@ -242,7 +245,7 @@ def __replace_version_strings(
     version_upper.config.current_version = new_version
     if new_semantic_version:
         version_upper.config.current_semantic_version = new_semantic_version
-    with open(DEFAULT_CONFIG_FILE, "w") as f:
+    with open(version_upper.config_path, "w") as f:
         f.write(version_upper.config.json(indent=2))
 
 
