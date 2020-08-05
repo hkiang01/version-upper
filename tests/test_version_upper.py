@@ -57,7 +57,7 @@ def bump_test_helper(
     expected_new_semantic_version: Optional[str] = None,
     expected_new_version: Optional[str] = None,
     old_version: Optional[str] = None,
-):
+) -> str:
     """Helper to facilitate testing
 
     Runs cli command in isolated filesystem with the following setup:
@@ -108,6 +108,11 @@ def bump_test_helper(
         The old version that should not remain in version_file
         or in current_version in the config file after-the-fact,
         by default None
+
+    Returns
+    -------
+    str
+        The content version_file after version_upper has run with cli_args
     """
     # load version file
     with open(version_file) as f:
@@ -169,13 +174,13 @@ def bump_test_helper(
 
             # check version file
             with open(version_file_name) as f:
-                version_file_contents = f.read()
+                new_version_file_contents = f.read()
             logger.debug(
-                f"version_file_contents after:\n{version_file_contents}"
+                f"version_file_contents after:\n{new_version_file_contents}"
             )
-            assert expected_new_version in version_file_contents
+            assert expected_new_version in new_version_file_contents
             if old_version:
-                assert old_version not in version_file_contents
+                assert old_version not in new_version_file_contents
 
             # check current-version command output
             current_version_result = runner.invoke(
@@ -193,6 +198,7 @@ def bump_test_helper(
                 current_version_result.output
                 == expected_new_semantic_version + "\n"
             )
+    return new_version_file_contents
 
 
 @pytest.mark.parametrize(
@@ -776,3 +782,21 @@ def test_main():
             with mock.patch.object(version_upper.sys, "exit") as mock_exit:
                 version_upper.init()
                 assert mock_exit.call_args[0][0] == 42
+
+
+def test_search():
+    version_file = "tests/sample_version_files/Chart_before.yaml"
+    config_file = "tests/sample_configs/chart.json"
+
+    bumped_version_file_contents = bump_test_helper(
+        version_file=version_file,
+        config_file=config_file,
+        cli_args=["bump", "patch"],
+        old_version="1.16.0",
+        expected_new_semantic_version="1.16.1",
+        expected_new_version="1.16.1",
+    )
+
+    with open("tests/sample_version_files/Chart_after.yaml") as f:
+        expected_contents = f.read()
+    assert bumped_version_file_contents == expected_contents
