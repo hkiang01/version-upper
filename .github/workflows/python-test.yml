@@ -4,9 +4,14 @@
 name: Python package
 
 # Trigger the workflow on push or pull request
+# Also trigger daily on the master branch
 on:
-  push: {}
-  pull_request: {}
+  push:
+    branches:
+      - '*'
+  pull_request: 
+    branches:
+      - '*'
   schedule:
     branches:
       - master
