@@ -121,20 +121,27 @@ def bump_test_helper(
     """
     # load config
     with open(config_file) as f:
-        config_file_contents = json.load(f)
-    files = config_file_contents["files"]
+        config_file_dict = json.load(f)
+
+    # validate config
+    Config(**config_file_dict)
+
+    files = config_file_dict["files"]
     assert len(files) == 1, (
         "Expecting only a single file. "
         "Feel free to update all the tests to accommodate more"
     )
     curr_file = files[0]
+    if isinstance(curr_file, dict):
+        curr_file = curr_file["path"]
+
     # load file
     with open(curr_file) as f:
         curr_file_contents = f.read()
 
     # load old config values (to test against config file after cli is run)
     # this list should not change
-    old_files = config_file_contents["files"]
+    old_files = config_file_dict["files"]
 
     runner = CliRunner()
     with runner.isolated_filesystem():
@@ -144,10 +151,9 @@ def bump_test_helper(
             expected_new_version = commit_hash
         logger.debug(f"curr_file_contents before:\n{curr_file_contents}")
         # create config file in fs
-        config_file_contents["files"] = [curr_file]
-        logger.debug(f"config_file_contents before:\n{config_file_contents}")
+        logger.debug(f"config_file_contents before:\n{config_file_dict}")
         with open(DEFAULT_CONFIG_FILE, "w") as f:
-            json.dump(config_file_contents, f)
+            json.dump(config_file_dict, f)
 
         # run command
         logger.debug(f"Running {cli_args}")
@@ -162,21 +168,17 @@ def bump_test_helper(
                 assert new_curr_file_contents == curr_file_contents
             with open(DEFAULT_CONFIG_FILE) as f:
                 new_config_file_contents = json.load(f)
-                assert new_config_file_contents == config_file_contents
+                assert new_config_file_contents == config_file_dict
         else:
             # check config file
-            del config_file_contents
+            del config_file_dict
             with open(DEFAULT_CONFIG_FILE) as f:
-                config_file_contents = json.load(f)
-            logger.debug(
-                f"config_file_contents after:\n{config_file_contents}"
-            )
-            assert config_file_contents["files"] == old_files
+                config_file_dict = json.load(f)
+            logger.debug(f"config_file_contents after:\n{config_file_dict}")
+            assert config_file_dict["files"] == old_files
+            assert config_file_dict["current_version"] == expected_new_version
             assert (
-                config_file_contents["current_version"] == expected_new_version
-            )
-            assert (
-                config_file_contents["current_semantic_version"]
+                config_file_dict["current_semantic_version"]
                 == expected_new_semantic_version
             )
 
