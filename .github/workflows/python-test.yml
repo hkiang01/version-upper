@@ -4,7 +4,14 @@
 name: Python package
 
 # Trigger the workflow on push or pull request
-on: [push, pull_request]
+on:
+  push: {}
+  pull_request: {}
+  schedule:
+    branches:
+      - master
+    # every day at 10pm UTC (5pm Central Time)
+    cron: '0 22 * * *'
 
 jobs:
   build:
