@@ -2,6 +2,6 @@
     "current_version": "0.0.0",
     "current_semantic_version": "0.0.0",
     "files": [
-        "tests/sample_files/default.json"
+        "tests/sample_files/not_present.txt"
     ]
 }

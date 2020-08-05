@@ -1,5 +1,7 @@
 {
     "current_version": "0.0.0rc1",
     "current_semantic_version": "0.0.0",
-    "files": []
+    "files": [
+        "tests/sample_files/rc.json"
+    ]
 }

@@ -1,0 +1,10 @@
+{
+    "current_version": "1.16.0",
+    "current_semantic_version": "1.16.0",
+    "files": [
+        {
+            "path": "tests/sample_files/Chart_before.yaml",
+            "search_pattern": "appVersion: current_version"
+        }
+    ]
+}
