@@ -206,6 +206,9 @@ def __replace_version_strings(
             curr_file = f.path
             with open(curr_file, "r") as fp:
                 content = fp.read()
+
+            # prepare to search for the current version
+            # by prepping the pattern used to search for it
             curr_search_pattern = f.search_pattern
             curr_search_pattern = curr_search_pattern.replace(
                 "{current_version}", CURRENT_VERSION_PATTERN
