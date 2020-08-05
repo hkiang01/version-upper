@@ -62,16 +62,17 @@ def bump_test_helper(
     """Helper to facilitate testing
 
     Runs cli command in isolated filesystem with the following setup:
-        1. version_file is added to a new git repo
-        2. config file is loaded with the version_file added
+        1. The file specified in "files" in the config_file
+           is added to a new git repo
+        2. config file is loaded with the file added
 
     After running the cli command, the following checks are made:
         1. Instances of old_version (if defined) are replaced
-           with the expcted new version in version_file.
+           with the expcted new version in the file specified in "files"
+           in the config_file.
         2. Only current_version and current_semantic_version are changed
            in the config, and that they match the expected values
            (Note the cli implicitly performs validation using Pydnatic).
-
 
     Parameters
     ----------
@@ -88,30 +89,35 @@ def bump_test_helper(
         by default None
     files_should_not_change : Optional[bool]
         If True, will check to make sure the file contents of config_file
-        and version_file have not changed after running cli with cli_args.
+        and file specified in "files" in the config_file
+        have not changed after running cli with cli_args.
         If False, will check that the expected changes to config_file
-        and version_file have been made,
+        and the file specified in "files" in the config_file have been made,
         by default False
     expected_new_semantic_version : Optional[str]
         The new semantic version that should replace the old semantic version
-        in version_file and in current_semantic_version in the config.
+        in the file specified in "files" in the config_file
+        and in current_semantic_version in the config.
         Only checked if files_should_not_change is False
         by default None
     expected_new_version : Optional[str]
-        The new version that should replace the old version in version_file
+        The new version that should replace the old version
+        in the file specified in "files" in the config_file
         and in current_version in the config. If not specified, then it will be
         the commit hash of the initial commit of the newly created git repo.
         Only checked if files_should_not_change is False
         By default None
     old_version : Optional[str]
-        The old version that should not remain in version_file
+        The old version that should not remain
+        in the file specified in "files" in the config_file
         or in current_version in the config file after-the-fact,
         by default None
 
     Returns
     -------
     str
-        The content version_file after version_upper has run with cli_args
+        The content of the file specified in "files" in the config_file
+        after version_upper has run with cli_args
     """
     # load config
     with open(config_file) as f:
@@ -121,10 +127,10 @@ def bump_test_helper(
         "Expecting only a single file. "
         "Feel free to update all the tests to accommodate more"
     )
-    version_file = files[0]
+    curr_file = files[0]
     # load version file
-    with open(version_file) as f:
-        version_file_contents = f.read()
+    with open(curr_file) as f:
+        curr_file_contents = f.read()
 
     # load old config values (to test against config file after cli is run)
     # this list should not change
@@ -133,14 +139,12 @@ def bump_test_helper(
     runner = CliRunner()
     with runner.isolated_filesystem():
         # create git repo with version file in fs
-        commit_hash = __init_repo_with_version(
-            version_file, version_file_contents
-        )
+        commit_hash = __init_repo_with_version(curr_file, curr_file_contents)
         if expected_new_version is None:
             expected_new_version = commit_hash
-        logger.debug(f"version_file_contents before:\n{version_file_contents}")
+        logger.debug(f"curr_file_contents before:\n{curr_file_contents}")
         # create config file in fs
-        config_file_contents["files"] = [version_file]
+        config_file_contents["files"] = [curr_file]
         logger.debug(f"config_file_contents before:\n{config_file_contents}")
         with open(DEFAULT_CONFIG_FILE, "w") as f:
             json.dump(config_file_contents, f)
@@ -153,9 +157,9 @@ def bump_test_helper(
             assert result.output == expected_output
 
         if files_should_not_change:
-            with open(version_file) as f:
-                new_version_file_contents = f.read()
-                assert new_version_file_contents == version_file_contents
+            with open(curr_file) as f:
+                new_curr_file_contents = f.read()
+                assert new_curr_file_contents == curr_file_contents
             with open(DEFAULT_CONFIG_FILE) as f:
                 new_config_file_contents = json.load(f)
                 assert new_config_file_contents == config_file_contents
@@ -177,14 +181,14 @@ def bump_test_helper(
             )
 
             # check version file
-            with open(version_file) as f:
-                new_version_file_contents = f.read()
+            with open(curr_file) as f:
+                new_curr_file_contents = f.read()
             logger.debug(
-                f"version_file_contents after:\n{new_version_file_contents}"
+                f"curr_file_contents after:\n{new_curr_file_contents}"
             )
-            assert expected_new_version in new_version_file_contents
+            assert expected_new_version in new_curr_file_contents
             if old_version:
-                assert old_version not in new_version_file_contents
+                assert old_version not in new_curr_file_contents
 
             # check current-version command output
             current_version_result = runner.invoke(
@@ -202,7 +206,7 @@ def bump_test_helper(
                 current_version_result.output
                 == expected_new_semantic_version + "\n"
             )
-    return new_version_file_contents
+    return new_curr_file_contents
 
 
 @pytest.mark.parametrize(
