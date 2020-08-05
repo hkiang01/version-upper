@@ -14,6 +14,11 @@ logger = logging.getLogger(__name__)
 DEFAULT_CONFIG_FILE = "version-upper.json"
 
 
+class SearchPattern(BaseModel):
+    path: str
+    search_pattern: str
+
+
 class Config(BaseModel):
     """The configuration file schema"""
 
@@ -32,7 +37,7 @@ class Config(BaseModel):
         description=("The current semantic version"),
         regex=r"\d+\.\d+\.\d+",
     )
-    files: List[Union[FilePath, DirectoryPath]] = Field(
+    files: List[Union[Union[FilePath, DirectoryPath], SearchPattern]] = Field(
         [],
         description=(
             "Files and directories wherein version strings will be updated. "
