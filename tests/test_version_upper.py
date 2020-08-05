@@ -128,7 +128,7 @@ def bump_test_helper(
         "Feel free to update all the tests to accommodate more"
     )
     curr_file = files[0]
-    # load version file
+    # load file
     with open(curr_file) as f:
         curr_file_contents = f.read()
 
@@ -138,7 +138,7 @@ def bump_test_helper(
 
     runner = CliRunner()
     with runner.isolated_filesystem():
-        # create git repo with version file in fs
+        # create git repo with file in fs
         commit_hash = __init_repo_with_version(curr_file, curr_file_contents)
         if expected_new_version is None:
             expected_new_version = commit_hash
@@ -180,7 +180,7 @@ def bump_test_helper(
                 == expected_new_semantic_version
             )
 
-            # check version file
+            # check file
             with open(curr_file) as f:
                 new_curr_file_contents = f.read()
             logger.debug(
@@ -775,7 +775,7 @@ def test_main():
 def test_search():
     config_file = "tests/sample_configs/chart.json"
 
-    bumped_version_file_contents = bump_test_helper(
+    bumped_file_contents = bump_test_helper(
         config_file=config_file,
         cli_args=["bump", "patch"],
         old_version="1.16.0",
@@ -785,4 +785,4 @@ def test_search():
 
     with open("tests/sample_files/Chart_after.yaml") as f:
         expected_contents = f.read()
-    assert bumped_version_file_contents == expected_contents
+    assert bumped_file_contents == expected_contents
