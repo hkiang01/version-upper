@@ -5,14 +5,14 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="version-upper",  # Replace with your own username
-    version="0.2.0",
+    version="0.2.1",
     author="Harrison Kiang",
     author_email="hkiang01@gmail.com",
     description="Bump version strings in your repo",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/hkiang01/version_upper",
-    packages=setuptools.find_packages(),
+    packages=setuptools.find_packages(exclude=["tests"]),
     classifiers=[
         "Programming Language :: Python :: 3.8",
         "Intended Audience :: Developers",
