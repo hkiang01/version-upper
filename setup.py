@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="version-upper",  # Replace with your own username
-    version="0.2.1",
+    version="0.2.2",
     author="Harrison Kiang",
     author_email="hkiang01@gmail.com",
     description="Bump version strings in your repo",
@@ -26,6 +26,6 @@ setuptools.setup(
     install_requires=["click>=0.7,!=3.0,!=5.0", "pydantic>=1.0b1"],
     entry_points="""
         [console_scripts]
-        version-upper=version_upper:cli
+        version-upper=version_upper:version_upper
     """,
 )
