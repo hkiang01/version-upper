@@ -17,7 +17,7 @@ setuptools.setup(
         "Programming Language :: Python :: 3.8",
         "Intended Audience :: Developers",
         "Topic :: Software Development",
-        "License :: OSI Approved :: MIT License",
+        "License :: OSI Approved :: The Unlicense (Unlicense)",
         "Operating System :: OS Independent",
         "Natural Language :: English",
     ],
